@@ -8,8 +8,9 @@ interface SoldierModelProps {
   color?: string;
 }
 
-// Using the pmndrs Soldier model with proper Run/Idle animations
-const SOLDIER_MODEL_URL = "https://raw.githubusercontent.com/pmndrs/gltfjsx/master/public/Soldier.glb";
+// STABLE URL from three.js repository (works!)
+// DO NOT change this - pmndrs URL returns 404
+const SOLDIER_MODEL_URL = "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Soldier.glb";
 
 function FallbackHumanoid({ color = "#f59e0b", isMoving = false }: SoldierModelProps) {
   const leftArmRef = useRef<THREE.Mesh>(null);
