@@ -53,8 +53,7 @@ export function Lobby({ onStart }: LobbyProps) {
     };
 
     const handlePlayClick = () => {
-        setScene("race");
-        startRace();
+        setScene("bridge");
         onStart();
     };
 

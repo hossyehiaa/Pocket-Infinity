@@ -3,17 +3,18 @@ import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameState } from "@/lib/stores/useGameState";
-import { SciFiArmor } from "./Humanoid";
+import { SoldierModel } from "./SoldierModel"; // Using the new Roblox bot model
 import { SpaceSkybox } from "./Skybox";
 
 function CrewMember({ name, position, isNear }: { name: string; position: [number, number, number]; isNear: boolean }) {
+  // Use distinct colors for identifying bots
   const color = name === "Walton" ? "#22c55e" : "#ec4899";
-  const accentColor = name === "Walton" ? "#0f5132" : "#831843";
 
   return (
     <group position={position}>
-      <SciFiArmor color={color} accentColor={accentColor} isHighlighted={isNear} />
-      
+      {/* Bot Model */}
+      <SoldierModel color={color} isMoving={false} />
+
       <Text
         position={[0, 2.2, 0]}
         fontSize={0.3}
@@ -25,7 +26,7 @@ function CrewMember({ name, position, isNear }: { name: string; position: [numbe
       >
         {name}
       </Text>
-      
+
       {isNear && (
         <Text
           position={[0, 1.9, 0]}
@@ -48,12 +49,12 @@ function CaptainsChair() {
         <boxGeometry args={[1.5, 1, 1.5]} />
         <meshStandardMaterial color="#1e3a5f" metalness={0.8} roughness={0.2} />
       </mesh>
-      
+
       <mesh position={[0, 1.2, -0.6]} castShadow>
         <boxGeometry args={[1.5, 1.4, 0.3]} />
         <meshStandardMaterial color="#1e3a5f" metalness={0.8} roughness={0.2} />
       </mesh>
-      
+
       <mesh position={[-0.9, 0.8, 0]} castShadow>
         <boxGeometry args={[0.3, 0.2, 1]} />
         <meshStandardMaterial color="#374151" metalness={0.9} roughness={0.1} />
@@ -62,7 +63,7 @@ function CaptainsChair() {
         <boxGeometry args={[0.3, 0.2, 1]} />
         <meshStandardMaterial color="#374151" metalness={0.9} roughness={0.1} />
       </mesh>
-      
+
       <pointLight position={[0, 2, 0]} intensity={0.5} color="#4fc3f7" distance={5} />
     </group>
   );
@@ -75,7 +76,7 @@ function SpaceWindow({ position, rotation }: { position: [number, number, number
         <planeGeometry args={[6, 4]} />
         <meshBasicMaterial color="#000011" transparent opacity={0.3} />
       </mesh>
-      
+
       <mesh position={[0, 0, -0.1]}>
         <boxGeometry args={[6.4, 4.4, 0.2]} />
         <meshStandardMaterial color="#374151" metalness={0.9} roughness={0.1} />
@@ -88,7 +89,7 @@ function HolographicGlobe() {
   const ringRef1 = useRef<THREE.Mesh>(null);
   const ringRef2 = useRef<THREE.Mesh>(null);
   const ringRef3 = useRef<THREE.Mesh>(null);
-  
+
   useFrame((_, delta) => {
     if (ringRef1.current) ringRef1.current.rotation.y += delta * 0.5;
     if (ringRef2.current) ringRef2.current.rotation.x += delta * 0.3;
@@ -99,7 +100,7 @@ function HolographicGlobe() {
     <group position={[0, 3, -5]}>
       <mesh>
         <sphereGeometry args={[0.8, 16, 16]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color="#22d3ee"
           emissive="#22d3ee"
           emissiveIntensity={0.5}
@@ -112,7 +113,7 @@ function HolographicGlobe() {
 
       <mesh ref={ringRef1}>
         <torusGeometry args={[1.2, 0.03, 8, 32]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color="#22d3ee"
           emissive="#22d3ee"
           emissiveIntensity={0.8}
@@ -121,7 +122,7 @@ function HolographicGlobe() {
 
       <mesh ref={ringRef2} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.4, 0.02, 8, 32]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color="#60a5fa"
           emissive="#60a5fa"
           emissiveIntensity={0.8}
@@ -130,7 +131,7 @@ function HolographicGlobe() {
 
       <mesh ref={ringRef3} rotation={[Math.PI / 4, 0, Math.PI / 4]}>
         <torusGeometry args={[1.6, 0.02, 8, 32]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color="#a855f7"
           emissive="#a855f7"
           emissiveIntensity={0.6}
@@ -150,12 +151,12 @@ function ConsolePanel({ position, rotation }: { position: [number, number, numbe
         <boxGeometry args={[2, 0.8, 0.3]} />
         <meshStandardMaterial color="#1f2937" metalness={0.7} roughness={0.3} />
       </mesh>
-      
+
       <mesh position={[0, 0.1, 0.16]}>
         <planeGeometry args={[1.6, 0.4]} />
         <meshBasicMaterial color="#0f172a" />
       </mesh>
-      
+
       <mesh position={[-0.5, 0.1, 0.17]}>
         <circleGeometry args={[0.05, 8]} />
         <meshBasicMaterial color="#22c55e" />
@@ -181,7 +182,7 @@ export function Bridge() {
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           color="#0a0a1a"
           metalness={0.95}
           roughness={0.05}
@@ -189,16 +190,17 @@ export function Bridge() {
         />
       </mesh>
 
+      {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 8, 0]}>
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color="#0a0a15" metalness={0.5} roughness={0.5} />
       </mesh>
 
+      {/* Walls */}
       <mesh position={[0, 4, -10]}>
         <planeGeometry args={[20, 8]} />
         <meshStandardMaterial color="#111827" metalness={0.3} roughness={0.7} />
       </mesh>
-
       <mesh position={[-10, 4, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[20, 8]} />
         <meshStandardMaterial color="#111827" metalness={0.3} roughness={0.7} />
@@ -224,6 +226,7 @@ export function Bridge() {
       <ConsolePanel position={[-7, 1, -3]} rotation={[-0.3, Math.PI / 4, 0]} />
       <ConsolePanel position={[7, 1, -3]} rotation={[-0.3, -Math.PI / 4, 0]} />
 
+      {/* NPCs restored to the scene */}
       {crew.map((member) => (
         <CrewMember
           key={member.id}

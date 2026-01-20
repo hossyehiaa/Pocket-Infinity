@@ -12,7 +12,7 @@ export function MobileControls({ onTalkPress }: MobileControlsProps) {
   const lookZoneRef = useRef<HTMLDivElement>(null);
   const joystickInstance = useRef<nipplejs.JoystickManager | null>(null);
   const lastTouch = useRef<{ x: number; y: number } | null>(null);
-  
+
   const { setMove, setLook, setJump, setShoot, setTalk } = useControls();
   const { scene, nearCrew, setChatOpen } = useGameState();
 
@@ -33,7 +33,8 @@ export function MobileControls({ onTalkPress }: MobileControlsProps) {
 
     joystickInstance.current.on("move", (_evt, data) => {
       if (data.vector) {
-        setMove(data.vector.x, -data.vector.y);
+        // User requested removing the negative on Y to fix inversion
+        setMove(data.vector.x, data.vector.y);
       }
     });
 
