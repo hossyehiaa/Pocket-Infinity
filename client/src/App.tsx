@@ -6,14 +6,17 @@ import { ensureAudioReady } from "@/lib/sounds";
 import "@fontsource/inter";
 
 import { useGameState } from "@/lib/stores/useGameState";
+import { useRaceStore } from "@/lib/stores/useRaceStore";
 import { Bridge } from "@/components/game/Bridge";
 import { Planet } from "@/components/game/Planet";
+import { RaceLevel } from "@/components/game/RaceLevel";
 import { Player } from "@/components/game/Player";
 import { NetworkManager } from "@/components/game/NetworkManager";
 import { MobileControls } from "@/components/game/MobileControls";
 import { ChatDialog } from "@/components/game/ChatDialog";
 import { GameUI } from "@/components/game/GameUI";
 import { VoiceEnabler } from "@/components/game/VoiceEnabler";
+import { Lobby } from "@/components/Lobby";
 
 enum Controls {
   forward = "forward",
@@ -52,7 +55,8 @@ function Scene() {
       <Stars radius={300} depth={60} count={5000} factor={4} saturation={0} fade speed={1} />
       {scene === "bridge" && <Bridge />}
       {scene === "planet" && <Planet />}
-      <Player />
+      {scene === "race" && <RaceLevel />}
+      {scene !== "race" && <Player />}
       <NetworkManager />
     </>
   );
@@ -60,10 +64,10 @@ function Scene() {
 
 function PostProcessing() {
   const { isMobile } = useGameState();
-  
+
   return (
     <EffectComposer enabled={!isMobile}>
-      <Bloom 
+      <Bloom
         intensity={0.5}
         luminanceThreshold={0.6}
         luminanceSmoothing={0.9}
@@ -84,36 +88,6 @@ function LoadingScreen() {
   );
 }
 
-function StartScreen({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-gradient-to-b from-gray-900 to-black flex items-center justify-center z-50">
-      <div className="text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-4">
-          POCKET INFINITY
-        </h1>
-        <p className="text-gray-400 mb-2 text-sm md:text-base">
-          Inspired by Black Mirror: USS Callister
-        </p>
-        <p className="text-gray-500 mb-8 text-xs md:text-sm max-w-md mx-auto">
-          Command your fearful crew. Warp to alien worlds. Destroy enemy drones.
-        </p>
-        
-        <button
-          onClick={onStart}
-          className="bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-4 rounded-lg font-bold text-xl transition-all hover:scale-105 shadow-lg shadow-cyan-500/30"
-        >
-          START GAME
-        </button>
-        
-        <div className="mt-8 text-gray-600 text-xs">
-          <div>Mobile: Touch controls enabled</div>
-          <div>Desktop: WASD + Mouse</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,7 +95,7 @@ function App() {
 
   useEffect(() => {
     const checkMobile = () => {
-      const mobile = window.innerWidth < 768 || 
+      const mobile = window.innerWidth < 768 ||
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(mobile);
     };
@@ -130,7 +104,7 @@ function App() {
     window.addEventListener("resize", checkMobile);
 
     const timer = setTimeout(() => setIsLoading(false), 1500);
-    
+
     return () => {
       window.removeEventListener("resize", checkMobile);
       clearTimeout(timer);
@@ -142,7 +116,7 @@ function App() {
   }
 
   if (!gameStarted) {
-    return <StartScreen onStart={() => {
+    return <Lobby onStart={() => {
       ensureAudioReady();
       setGameStarted(true);
     }} />;
@@ -166,7 +140,7 @@ function App() {
           dpr={isMobile ? [1, 1.5] : [1, 2]}
         >
           <color attach="background" args={["#000011"]} />
-          
+
           <Suspense fallback={null}>
             <Scene />
             {!isMobile && <PostProcessing />}
@@ -176,7 +150,7 @@ function App() {
         <GameUI />
         <ChatDialog />
         <VoiceEnabler />
-        
+
         {isMobile && <MobileControls />}
       </KeyboardControls>
     </div>

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { PlayerState } from "playroomkit";
-import { PlayerHumanoid } from "./Humanoid";
+import { SoldierModel } from "./SoldierModel";
 
 interface NetworkPlayerProps {
   player: PlayerState;
@@ -11,7 +11,7 @@ interface NetworkPlayerProps {
 
 function SpeakingIndicator() {
   const meshRef = useRef<THREE.Mesh>(null);
-  
+
   useFrame(({ clock }) => {
     if (meshRef.current) {
       const scale = 1 + Math.sin(clock.elapsedTime * 8) * 0.2;
@@ -48,9 +48,11 @@ function SpeakingIndicator() {
 export function NetworkPlayer({ player, color = "#e74c3c" }: NetworkPlayerProps) {
   const groupRef = useRef<THREE.Group>(null);
   const targetPosition = useRef(new THREE.Vector3(0, 1, 5));
+  const previousPosition = useRef(new THREE.Vector3(0, 1, 5));
   const targetRotation = useRef(0);
   const hasInitialized = useRef(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -65,9 +67,15 @@ export function NetworkPlayer({ player, color = "#e74c3c" }: NetworkPlayerProps)
       targetPosition.current.set(pos.x, pos.y, pos.z);
       if (!hasInitialized.current) {
         groupRef.current.position.copy(targetPosition.current);
+        previousPosition.current.copy(targetPosition.current);
         hasInitialized.current = true;
       } else {
+        // Detect movement based on position change
+        const movementDistance = targetPosition.current.distanceTo(previousPosition.current);
+        setIsMoving(movementDistance > 0.01);
+
         groupRef.current.position.lerp(targetPosition.current, 0.15);
+        previousPosition.current.copy(groupRef.current.position);
       }
     }
 
@@ -85,7 +93,7 @@ export function NetworkPlayer({ player, color = "#e74c3c" }: NetworkPlayerProps)
 
   return (
     <group ref={groupRef} position={[0, 1, 5]}>
-      <PlayerHumanoid color={playerColor} />
+      <SoldierModel isMoving={isMoving} color={playerColor} />
       {isSpeaking && <SpeakingIndicator />}
     </group>
   );

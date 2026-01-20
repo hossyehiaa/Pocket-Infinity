@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 
-export type GameScene = "bridge" | "planet";
+export type GameScene = "bridge" | "planet" | "race";
 
 export interface PlanetParams {
   groundColor: string;
@@ -76,7 +76,7 @@ interface GameState {
   zone: ZoneState;
   isInVehicle: boolean;
   nearVehicle: boolean;
-  
+
   setScene: (scene: GameScene) => void;
   setWeapon: (weapon: WeaponType) => void;
   toggleHoverboard: () => void;
@@ -201,7 +201,7 @@ export const useGameState = create<GameState>()(
     damagePlayer: (damage) =>
       set((state) => {
         const newHealth = Math.max(0, state.playerHealth - damage);
-        return { 
+        return {
           playerHealth: newHealth,
           isGameOver: newHealth <= 0
         };

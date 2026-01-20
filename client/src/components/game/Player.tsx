@@ -7,7 +7,8 @@ import { useControls } from "@/lib/stores/useControls";
 import { useGameState, WEAPONS, WeaponType } from "@/lib/stores/useGameState";
 import { getGroundHeight } from "./Planet";
 import { SoldierModel } from "./SoldierModel";
-import { playJump, playLaserShoot } from "@/lib/sounds";
+import { WeaponModel } from "./WeaponModel";
+import { playJump, playGunshot } from "@/lib/sounds";
 
 interface PlayerProps {
   onPositionChange?: (position: THREE.Vector3) => void;
@@ -30,13 +31,13 @@ enum Controls {
 function Hoverboard() {
   const meshRef = useRef<THREE.Group>(null);
   const time = useRef(0);
-  
+
   useFrame((_, delta) => {
     if (!meshRef.current) return;
     time.current += delta;
     meshRef.current.position.y = -0.3 + Math.sin(time.current * 3) * 0.1;
   });
-  
+
   return (
     <group ref={meshRef} position={[0, -0.3, 0]}>
       <mesh rotation={[0, 0, 0]}>
@@ -61,14 +62,15 @@ export function Player({ onPositionChange }: PlayerProps) {
   const velocityRef = useRef(new THREE.Vector3());
   const isGroundedRef = useRef(true);
   const cameraRotationRef = useRef({ x: 0, y: 0 });
-  
+
   const mobileControls = useControls();
-  const { 
-    scene, planetParams, crew, setNearCrew, addBullet, isMobile, setPlayerPosition, 
+  const {
+    scene, planetParams, crew, setNearCrew, addBullet, isMobile, setPlayerPosition,
     isGameOver, knockbackDirection, currentWeapon, setWeapon, isOnHoverboard, toggleHoverboard,
     nearVehicle, isInVehicle, setInVehicle
   } = useGameState();
   const [isMoving, setIsMoving] = useState(false);
+  const [isShooting, setIsShooting] = useState(false);
   const [, getKeyboard] = useKeyboardControls<Controls>();
   const knockbackVelocity = useRef(new THREE.Vector3());
 
@@ -97,17 +99,19 @@ export function Player({ onPositionChange }: PlayerProps) {
   const fireWeapon = (position: THREE.Vector3, cameraYRotation: number) => {
     const now = Date.now();
     const weaponInfo = WEAPONS[currentWeapon];
-    
+
     if (now - lastShootTime.current < weaponInfo.cooldown) return;
     lastShootTime.current = now;
-    
-    playLaserShoot();
-    
+
+    playGunshot();
+    setIsShooting(true);
+    setTimeout(() => setIsShooting(false), 100);
+
     if (currentWeapon === "sniper") {
       const direction = new THREE.Vector3(0, 0, -1);
       direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYRotation);
       direction.normalize();
-      
+
       addBullet({
         id: `bullet-${now}`,
         position: [position.x, position.y, position.z],
@@ -116,20 +120,20 @@ export function Player({ onPositionChange }: PlayerProps) {
         weaponType: "sniper",
         damage: weaponInfo.damage,
       });
-      
+
     } else if (currentWeapon === "shotgun") {
       const baseDirection = new THREE.Vector3(0, 0, -1);
       baseDirection.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYRotation);
-      
+
       for (let i = 0; i < (weaponInfo.projectileCount || 5); i++) {
         const spreadX = (Math.random() - 0.5) * (weaponInfo.spread || 0.3);
         const spreadY = (Math.random() - 0.5) * (weaponInfo.spread || 0.3) * 0.5;
-        
+
         const direction = baseDirection.clone();
         direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), spreadX);
         direction.applyAxisAngle(new THREE.Vector3(1, 0, 0), spreadY);
         direction.normalize();
-        
+
         addBullet({
           id: `bullet-${now}-${i}`,
           position: [position.x, position.y, position.z],
@@ -143,7 +147,7 @@ export function Player({ onPositionChange }: PlayerProps) {
       const direction = new THREE.Vector3(0, 0, -1);
       direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYRotation);
       direction.normalize();
-      
+
       addBullet({
         id: `bullet-${now}`,
         position: [position.x, position.y, position.z],
@@ -178,12 +182,12 @@ export function Player({ onPositionChange }: PlayerProps) {
       lastWeaponSwitch.current = now;
       setWeapon("sniper");
     }
-    
+
     if (keyboard.hoverboard && now - lastHoverboardToggle.current > 500 && scene === "planet" && !isInVehicle) {
       lastHoverboardToggle.current = now;
       toggleHoverboard();
     }
-    
+
     if (keyboard.interact && now - lastVehicleToggle.current > 500 && scene === "planet") {
       lastVehicleToggle.current = now;
       if (nearVehicle && !isInVehicle) {
@@ -211,7 +215,7 @@ export function Player({ onPositionChange }: PlayerProps) {
       moveZ = mobileControls.moveZ;
       shouldJump = mobileControls.jump;
       shouldShoot = mobileControls.shoot;
-      
+
       cameraRotationRef.current.y -= mobileControls.lookX;
       cameraRotationRef.current.x -= mobileControls.lookY;
       cameraRotationRef.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraRotationRef.current.x));
@@ -226,10 +230,10 @@ export function Player({ onPositionChange }: PlayerProps) {
 
     const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();
     moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotationRef.current.y);
-    
+
     const newX = groupRef.current.position.x + moveDir.x * moveSpeed * delta;
     const newZ = groupRef.current.position.z + moveDir.z * moveSpeed * delta;
-    
+
     groupRef.current.position.x = newX;
     groupRef.current.position.z = newZ;
 
@@ -237,7 +241,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     if (moving !== isMoving) {
       setIsMoving(moving);
     }
-    
+
     if (moving) {
       const targetRotation = Math.atan2(moveDir.x, moveDir.z);
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
@@ -284,7 +288,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     if (scene === "bridge") {
       let closest: typeof crew[0] | null = null;
       let closestDist = Infinity;
-      
+
       for (const member of crew) {
         const dist = groupRef.current.position.distanceTo(
           new THREE.Vector3(...member.position)
@@ -299,7 +303,7 @@ export function Player({ onPositionChange }: PlayerProps) {
 
     const cameraOffset = new THREE.Vector3(0, 2, 5);
     cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotationRef.current.y);
-    
+
     state.camera.position.lerp(
       new THREE.Vector3(
         groupRef.current.position.x + cameraOffset.x,
@@ -323,11 +327,11 @@ export function Player({ onPositionChange }: PlayerProps) {
     const me = myPlayer();
     if (me) {
       const pos = groupRef.current.position;
-      const movedEnough = 
+      const movedEnough =
         Math.abs(pos.x - lastNetworkPos.current.x) > 0.05 ||
         Math.abs(pos.y - lastNetworkPos.current.y) > 0.05 ||
         Math.abs(pos.z - lastNetworkPos.current.z) > 0.05;
-      
+
       if (now - lastNetworkUpdate.current > 50 && movedEnough) {
         lastNetworkUpdate.current = now;
         lastNetworkPos.current = { x: pos.x, y: pos.y, z: pos.z };
@@ -344,6 +348,12 @@ export function Player({ onPositionChange }: PlayerProps) {
     <group ref={groupRef} position={[0, 1, 5]}>
       {!isInVehicle && <SoldierModel isMoving={isMoving} color={playerColor} />}
       {isOnHoverboard && !isInVehicle && <Hoverboard />}
+      {/* Weapon held by player */}
+      {!isInVehicle && scene === "planet" && (
+        <group position={[0.3, 0.8, 0.5]} rotation={[0, Math.PI / 2, 0]}>
+          <WeaponModel type={currentWeapon} isShooting={isShooting} />
+        </group>
+      )}
     </group>
   );
 }

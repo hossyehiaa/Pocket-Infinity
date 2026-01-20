@@ -8,7 +8,8 @@ interface SoldierModelProps {
   color?: string;
 }
 
-const SOLDIER_MODEL_URL = "https://models.readyplayer.me/64bfa15f0e72c63d7c3934e6.glb";
+// Using the pmndrs Soldier model with proper Run/Idle animations
+const SOLDIER_MODEL_URL = "https://raw.githubusercontent.com/pmndrs/gltfjsx/master/public/Soldier.glb";
 
 function FallbackHumanoid({ color = "#f59e0b", isMoving = false }: SoldierModelProps) {
   const leftArmRef = useRef<THREE.Mesh>(null);
@@ -16,10 +17,10 @@ function FallbackHumanoid({ color = "#f59e0b", isMoving = false }: SoldierModelP
   const leftLegRef = useRef<THREE.Mesh>(null);
   const rightLegRef = useRef<THREE.Mesh>(null);
   const time = useRef(0);
-  
+
   useFrame((_, delta) => {
     time.current += delta * 10;
-    
+
     if (isMoving) {
       const armSwing = Math.sin(time.current) * 0.5;
       const legSwing = Math.sin(time.current) * 0.4;
@@ -34,7 +35,7 @@ function FallbackHumanoid({ color = "#f59e0b", isMoving = false }: SoldierModelP
       if (rightLegRef.current) rightLegRef.current.rotation.x *= 0.9;
     }
   });
-  
+
   return (
     <group>
       <mesh position={[0, 0.85, 0]} castShadow>
@@ -77,51 +78,59 @@ function SoldierGLTF({ isMoving = false, color }: SoldierModelProps) {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(SOLDIER_MODEL_URL);
   const { actions } = useAnimations(animations, group);
-  const currentAction = useRef<string>("Idle");
-  
+  const currentAction = useRef<string | null>(null);
+
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
+        // Optional: Apply custom color tint
         if (color && child.material) {
           const mat = (child.material as THREE.MeshStandardMaterial).clone();
-          mat.color = new THREE.Color(color);
+          // Blend with original color rather than replacing
+          const originalColor = mat.color.clone();
+          const tintColor = new THREE.Color(color);
+          mat.color = originalColor.lerp(tintColor, 0.3);
           child.material = mat;
         }
       }
     });
     return clone;
   }, [scene, color]);
-  
+
+  // Initialize with Idle animation
   useEffect(() => {
     if (!actions) return;
+
     const idleAction = actions["Idle"];
-    if (idleAction) {
+    if (idleAction && !currentAction.current) {
       idleAction.play();
       currentAction.current = "Idle";
     }
   }, [actions]);
-  
+
+  // Switch between Run and Idle based on movement
   useEffect(() => {
     if (!actions) return;
-    
+
     const targetAction = isMoving ? "Run" : "Idle";
     if (currentAction.current === targetAction) return;
-    
-    const prevAction = actions[currentAction.current];
-    const nextAction = actions[targetAction] || actions["Walk"];
-    
+
+    const prevAction = currentAction.current ? actions[currentAction.current] : null;
+    const nextAction = actions[targetAction];
+
     if (nextAction) {
-      prevAction?.fadeOut(0.2);
-      nextAction.reset().fadeIn(0.2).play();
+      // Smooth transition with fade
+      prevAction?.fadeOut(0.3);
+      nextAction.reset().fadeIn(0.3).play();
       currentAction.current = targetAction;
     }
   }, [isMoving, actions]);
-  
+
   return (
-    <group ref={group} scale={[0.5, 0.5, 0.5]} position={[0, -0.5, 0]}>
+    <group ref={group} scale={[1.5, 1.5, 1.5]} position={[0, -1, 0]}>
       <primitive object={clonedScene} />
     </group>
   );
@@ -130,7 +139,7 @@ function SoldierGLTF({ isMoving = false, color }: SoldierModelProps) {
 export function SoldierModel({ isMoving = false, color }: SoldierModelProps) {
   return (
     <Suspense fallback={<FallbackHumanoid isMoving={isMoving} color={color} />}>
-      <FallbackHumanoid isMoving={isMoving} color={color} />
+      <SoldierGLTF isMoving={isMoving} color={color} />
     </Suspense>
   );
 }
@@ -138,21 +147,21 @@ export function SoldierModel({ isMoving = false, color }: SoldierModelProps) {
 export function DroneModel({ isMoving = false }: { isMoving?: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const time = useRef(Math.random() * Math.PI * 2);
-  
+
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     time.current += delta * 3;
     groupRef.current.position.y = Math.sin(time.current) * 0.15;
     groupRef.current.rotation.y += delta * 0.5;
   });
-  
+
   return (
     <group ref={groupRef}>
       <mesh castShadow>
         <octahedronGeometry args={[0.6, 0]} />
-        <meshStandardMaterial 
-          color="#1f2937" 
-          metalness={0.9} 
+        <meshStandardMaterial
+          color="#1f2937"
+          metalness={0.9}
           roughness={0.2}
           emissive="#ef4444"
           emissiveIntensity={0.3}
@@ -160,10 +169,10 @@ export function DroneModel({ isMoving = false }: { isMoving?: boolean }) {
       </mesh>
       <mesh position={[0, 0, 0.5]}>
         <boxGeometry args={[0.15, 0.15, 0.3]} />
-        <meshStandardMaterial 
-          color="#ef4444" 
-          emissive="#ef4444" 
-          emissiveIntensity={0.8} 
+        <meshStandardMaterial
+          color="#ef4444"
+          emissive="#ef4444"
+          emissiveIntensity={0.8}
         />
       </mesh>
       <mesh position={[0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
@@ -176,9 +185,9 @@ export function DroneModel({ isMoving = false }: { isMoving?: boolean }) {
       </mesh>
       <mesh position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.3, 0.02, 8, 16]} />
-        <meshStandardMaterial 
-          color="#00ffff" 
-          emissive="#00ffff" 
+        <meshStandardMaterial
+          color="#00ffff"
+          emissive="#00ffff"
           emissiveIntensity={0.5}
           transparent
           opacity={0.7}

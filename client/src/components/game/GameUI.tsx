@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useGameState, WEAPONS, WeaponType } from "@/lib/stores/useGameState";
+import { useRaceStore } from "@/lib/stores/useRaceStore";
 import { setMuted, getMuted, initAudio } from "@/lib/sounds";
 import { isHost, setState as setRoomState, usePlayersList, getRoomCode, myPlayer } from "playroomkit";
 import { Minimap } from "./Minimap";
@@ -31,7 +32,7 @@ const WeaponIcon = ({ type, isActive }: { type: WeaponType; isActive: boolean })
       </svg>
     ),
   };
-  
+
   return (
     <div className={`p-2 rounded-lg border-2 transition-all ${isActive ? 'border-cyan-400 bg-cyan-400/20' : 'border-gray-600 bg-gray-800/50'}`}>
       {icons[type]}
@@ -40,8 +41,8 @@ const WeaponIcon = ({ type, isActive }: { type: WeaponType; isActive: boolean })
 };
 
 export function GameUI() {
-  const { 
-    scene, score, playerHealth, planetParams, isWarping, nearCrew, isMobile, 
+  const {
+    scene, score, playerHealth, planetParams, isWarping, nearCrew, isMobile,
     setScene, setChatOpen, isGameOver, showDamageFlash, resetGame,
     isMicMuted, setMicMuted, currentWeapon, setWeapon, isOnHoverboard,
     zone, nearVehicle, isInVehicle
@@ -57,7 +58,7 @@ export function GameUI() {
       const code = getRoomCode();
       setRoomCode(code || null);
     };
-    
+
     updateRoomCode();
     const interval = setInterval(updateRoomCode, 2000);
     return () => clearInterval(interval);
@@ -66,7 +67,7 @@ export function GameUI() {
   const toggleMic = () => {
     const newMicMuted = !isMicMuted;
     setMicMuted(newMicMuted);
-    
+
     const me = myPlayer();
     if (me) {
       me.setState("micMuted", newMicMuted);
@@ -92,7 +93,7 @@ export function GameUI() {
     <div className="fixed inset-0 pointer-events-none z-40">
       {showDamageFlash && (
         <div className="absolute inset-0 pointer-events-none z-50">
-          <div 
+          <div
             className="absolute inset-0"
             style={{
               background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(255, 0, 0, 0.6) 100%)',
@@ -113,6 +114,58 @@ export function GameUI() {
               className="bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-4 rounded-lg font-bold text-xl transition-all hover:scale-105 shadow-lg shadow-cyan-500/30"
             >
               RESPAWN
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Race Mode: QUALIFIED Screen */}
+      {scene === "race" && useRaceStore.getState().playerQualified && (
+        <div className="absolute inset-0 bg-gradient-to-br from-green-600/90 to-emerald-500/90 flex items-center justify-center pointer-events-auto z-50 animate-fade-in">
+          <div className="text-center">
+            <div className="text-9xl font-black text-white mb-8 animate-bounce drop-shadow-2xl">
+              QUALIFIED!
+            </div>
+            <div className="text-4xl text-white/90 mb-4">
+              Position: {useRaceStore.getState().playerFinishPosition} / 10
+            </div>
+            <div className="text-2xl text-white/80 mb-8">
+              You made it to the next round!
+            </div>
+            <button
+              onClick={() => {
+                useRaceStore.getState().resetRace();
+                setScene("bridge");
+              }}
+              className="bg-white hover:bg-gray-100 text-green-600 px-12 py-5 rounded-full font-bold text-2xl transition-all hover:scale-105 shadow-2xl"
+            >
+              CONTINUE
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Race Mode: ELIMINATED Screen */}
+      {scene === "race" && useRaceStore.getState().playerEliminated && (
+        <div className="absolute inset-0 bg-gradient-to-br from-red-600/90 to-rose-500/90 flex items-center justify-center pointer-events-auto z-50 animate-fade-in">
+          <div className="text-center">
+            <div className="text-9xl font-black text-white mb-8 drop-shadow-2xl">
+              ELIMINATED!
+            </div>
+            <div className="text-4xl text-white/90 mb-4">
+              Position: {useRaceStore.getState().playerFinishPosition} / 10
+            </div>
+            <div className="text-2xl text-white/80 mb-8">
+              Better luck next time!
+            </div>
+            <button
+              onClick={() => {
+                useRaceStore.getState().resetRace();
+                setScene("bridge");
+              }}
+              className="bg-white hover:bg-gray-100 text-red-600 px-12 py-5 rounded-full font-bold text-2xl transition-all hover:scale-105 shadow-2xl"
+            >
+              RETURN TO LOBBY
             </button>
           </div>
         </div>
@@ -149,13 +202,13 @@ export function GameUI() {
           <div className="absolute top-[180px] left-4 pointer-events-none">
             <div className="text-xs text-gray-400 mb-1">HEALTH</div>
             <div className="w-32 h-3 bg-gray-800 rounded-full overflow-hidden border border-gray-600">
-              <div 
+              <div
                 className="h-full transition-all duration-300"
-                style={{ 
+                style={{
                   width: `${playerHealth}%`,
-                  background: playerHealth > 50 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 
-                             playerHealth > 25 ? 'linear-gradient(90deg, #eab308, #facc15)' : 
-                             'linear-gradient(90deg, #dc2626, #ef4444)'
+                  background: playerHealth > 50 ? 'linear-gradient(90deg, #22c55e, #4ade80)' :
+                    playerHealth > 25 ? 'linear-gradient(90deg, #eab308, #facc15)' :
+                      'linear-gradient(90deg, #dc2626, #ef4444)'
                 }}
               />
             </div>
@@ -218,6 +271,39 @@ export function GameUI() {
               <div className="bg-blue-600/90 text-white px-4 py-2 rounded-lg font-bold animate-pulse">
                 Press F to Drive
               </div>
+            </div>
+          )}
+
+          {/* Crosshair - exact center of screen */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="relative w-8 h-8">
+              {/* Horizontal line */}
+              <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-full h-0.5 bg-white opacity-80">
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 w-3 h-0.5 bg-transparent" />
+              </div>
+              {/* Vertical line */}
+              <div className="absolute left-1/2 top-0 transform -translate-x-1/2 h-full w-0.5 bg-white opacity-80">
+                <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 h-3 w-0.5 bg-transparent" />
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Shoot Button */}
+          {isMobile && (
+            <div className="absolute bottom-24 right-24 pointer-events-auto">
+              <button
+                className="w-20 h-20 rounded-full bg-red-600/80 hover:bg-red-500 active:bg-red-700 flex items-center justify-center shadow-lg shadow-red-500/30 border-4 border-white/30 transition-all"
+                onPointerDown={() => {
+                  // Trigger shoot via controls
+                  const shootEvent = new KeyboardEvent('keydown', { key: ' ' });
+                  window.dispatchEvent(shootEvent);
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="white" className="w-10 h-10">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2L12 8M12 16L12 22M2 12L8 12M16 12L22 12" stroke="white" strokeWidth="2" />
+                </svg>
+              </button>
             </div>
           )}
         </>
@@ -284,11 +370,10 @@ export function GameUI() {
 
       <button
         onClick={toggleMic}
-        className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center pointer-events-auto transition-all z-50 ${
-          isMicMuted 
-            ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/30' 
-            : 'bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/30'
-        }`}
+        className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center pointer-events-auto transition-all z-50 ${isMicMuted
+          ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-500/30'
+          : 'bg-green-600 hover:bg-green-500 shadow-lg shadow-green-500/30'
+          }`}
         title={isMicMuted ? "Unmute Microphone" : "Mute Microphone"}
       >
         {isMicMuted ? (
