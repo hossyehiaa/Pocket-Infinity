@@ -9,8 +9,9 @@ export interface CyberbotModelProps {
   name?: string; // Optional name tag support
 }
 
-// Stable URL for the Platformer Bot model
-const BOT_MODEL_URL = "https://raw.githubusercontent.com/pmndrs/drei-assets/master/prototypes/bot/model.gltf";
+// OFFICIAL Three.js RobotExpressive model - STABLE and TESTED
+// This model has verified animations: "Idle", "Walking", "Running"
+const BOT_MODEL_URL = "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/RobotExpressive/RobotExpressive.glb";
 
 function CyberbotGLTF({ isMoving = false, color }: CyberbotModelProps) {
   const group = useRef<THREE.Group>(null);
