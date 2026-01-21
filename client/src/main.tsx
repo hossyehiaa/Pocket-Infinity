@@ -4,13 +4,8 @@ import App from "./App";
 import { AudioManager } from "./components/game/AudioManager";
 import "./index.css";
 import { initAudio } from "./lib/sounds";
-import VConsole from "vconsole";
 
 console.log("🔊 AUDIO SYSTEM STARTING IN PROD");
-
-// Initialize vConsole for mobile debugging
-const vConsole = new VConsole();
-console.log("📱 vConsole initialized - Green button available for debugging");
 
 insertCoin({
   streamMode: true,
