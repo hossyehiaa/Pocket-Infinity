@@ -49,9 +49,9 @@ function getTextureForPlanetType(planetType: "volcanic" | "forest" | "ice" | "de
 }
 
 function Terrain({ color }: { color: string }) {
-  // Use realistic pmndrs dust/sand textures for all terrain types
-  const diffuseMap = useTexture("https://raw.githubusercontent.com/pmndrs/drei-assets/master/prototypes/dust/diffuse.jpg");
-  const normalMap = useTexture("https://raw.githubusercontent.com/pmndrs/drei-assets/master/prototypes/dust/normal.jpg");
+  // Using stable smoke texture instead of broken dust textures
+  const diffuseMap = useTexture("https://raw.githubusercontent.com/pmndrs/drei-assets/master/clouds/smoke.png");
+  const normalMap = useTexture("https://raw.githubusercontent.com/pmndrs/drei-assets/master/clouds/smoke.png");
 
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
