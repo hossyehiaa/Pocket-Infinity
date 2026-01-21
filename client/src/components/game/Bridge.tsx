@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameState } from "@/lib/stores/useGameState";
-import { SoldierModel } from "./SoldierModel"; // Using the new Roblox bot model
+import { CyberbotModel } from "./SoldierModel"; // Using the new Roblox bot model
 import { SpaceSkybox } from "./Skybox";
 
 function CrewMember({ name, position, isNear }: { name: string; position: [number, number, number]; isNear: boolean }) {
@@ -13,7 +13,7 @@ function CrewMember({ name, position, isNear }: { name: string; position: [numbe
   return (
     <group position={position}>
       {/* Bot Model */}
-      <SoldierModel color={color} isMoving={false} />
+      <CyberbotModel color={color} isMoving={false} />
 
       <Text
         position={[0, 2.2, 0]}

@@ -4,30 +4,21 @@ import { OrbitControls, Environment } from "@react-three/drei";
 import { usePlayerStore, SkinType } from "@/lib/stores/usePlayerStore";
 import { useGameState } from "@/lib/stores/useGameState";
 import { useRaceStore } from "@/lib/stores/useRaceStore";
-import { SoldierModel } from "./game/SoldierModel";
-import { SciFiArmor } from "./game/Humanoid";
+import { CyberbotModel } from "./game/SoldierModel";
 
 interface LobbyProps {
     onStart: () => void;
 }
 
 const SKINS: { id: SkinType; name: string; color: string; locked: boolean; price?: number }[] = [
-    { id: 'soldier', name: 'Soldier', color: '#f59e0b', locked: false },
-    { id: 'cyberbot', name: 'Cyber-Bot', color: '#3b82f6', locked: false },
-    { id: 'alien', name: 'Alien', color: '#22c55e', locked: false },
+    { id: 'soldier', name: 'Desert Camo', color: '#f59e0b', locked: false },
+    { id: 'cyberbot', name: 'Cyber Blue', color: '#3b82f6', locked: false },
+    { id: 'alien', name: 'Alien Green', color: '#22c55e', locked: false },
 ];
 
 function SkinPreview({ skin, color }: { skin: SkinType; color: string }) {
-    if (skin === 'soldier') {
-        return <SoldierModel isMoving={false} color={color} />;
-    }
-
-    if (skin === 'cyberbot') {
-        return <SciFiArmor color={color} accentColor="#00ffff" isHighlighted position={[0, -0.5, 0]} />;
-    }
-
-    // Alien skin
-    return <SoldierModel isMoving={false} color={color} />;
+    // All skins use the Cyberbot model now, just with different colors
+    return <CyberbotModel isMoving={false} color={color} />;
 }
 
 export function Lobby({ onStart }: LobbyProps) {
