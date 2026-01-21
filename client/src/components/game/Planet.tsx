@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { useFrame, useThree, useLoader } from "@react-three/fiber";
-import { Stars, Text, useTexture, Sky, Environment } from "@react-three/drei";
+import { Stars, Text, Sky, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameState } from "@/lib/stores/useGameState";
 import { playExplosion } from "@/lib/sounds";
@@ -49,10 +49,7 @@ function getTextureForPlanetType(planetType: "volcanic" | "forest" | "ice" | "de
 }
 
 function Terrain({ color }: { color: string }) {
-  // Using stable smoke texture instead of broken dust textures
-  const diffuseMap = useTexture("https://raw.githubusercontent.com/pmndrs/drei-assets/master/clouds/smoke.png");
-  const normalMap = useTexture("https://raw.githubusercontent.com/pmndrs/drei-assets/master/clouds/smoke.png");
-
+  // No external textures - using simple colored material to avoid 404 errors
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
     const positions = geo.attributes.position.array as Float32Array;
@@ -67,23 +64,10 @@ function Terrain({ color }: { color: string }) {
     return geo;
   }, []);
 
-  // Configure textures for realistic tiling across the infinite map
-  useMemo(() => {
-    diffuseMap.wrapS = THREE.RepeatWrapping;
-    diffuseMap.wrapT = THREE.RepeatWrapping;
-    diffuseMap.repeat.set(20, 20);
-
-    normalMap.wrapS = THREE.RepeatWrapping;
-    normalMap.wrapT = THREE.RepeatWrapping;
-    normalMap.repeat.set(20, 20);
-  }, [diffuseMap, normalMap]);
-
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <primitive object={geometry} />
       <meshStandardMaterial
-        map={diffuseMap}
-        normalMap={normalMap}
         color={color}
         roughness={0.85}
         metalness={0.1}
