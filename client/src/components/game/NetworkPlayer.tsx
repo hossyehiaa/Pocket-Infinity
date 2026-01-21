@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { PlayerState } from "playroomkit";
-import { SoldierModel } from "./SoldierModel";
+import { CyberbotModel } from "./SoldierModel";
 
 interface NetworkPlayerProps {
   player: PlayerState;
@@ -93,7 +93,7 @@ export function NetworkPlayer({ player, color = "#e74c3c" }: NetworkPlayerProps)
 
   return (
     <group ref={groupRef} position={[0, 1, 5]}>
-      <SoldierModel isMoving={isMoving} color={playerColor} />
+      <CyberbotModel isMoving={isMoving} color={playerColor} />
       {isSpeaking && <SpeakingIndicator />}
     </group>
   );

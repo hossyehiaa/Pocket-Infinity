@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { SoldierModel } from "./SoldierModel";
+import { CyberbotModel } from "./SoldierModel";
 import { useRaceStore, RaceBot as RaceBotType } from "@/lib/stores/useRaceStore";
 
 interface RaceBotProps {
@@ -77,7 +77,7 @@ export function RaceBot({ bot }: RaceBotProps) {
 
     return (
         <group ref={meshRef} position={bot.position}>
-            <SoldierModel isMoving={!bot.hasFinished} color={bot.color} />
+            <CyberbotModel isMoving={!bot.hasFinished} color={bot.color} />
             {/* Bot name tag */}
             <mesh position={[0, 2.5, 0]}>
                 <sphereGeometry args={[0.15, 8, 8]} />

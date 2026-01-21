@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
 import * as THREE from "three";
-import { SoldierModel } from "./SoldierModel";
+import { CyberbotModel } from "./SoldierModel";
 import { useControls } from "@/lib/stores/useControls";
 import { useGameState } from "@/lib/stores/useGameState";
 import { useRaceStore } from "@/lib/stores/useRaceStore";
@@ -156,7 +156,7 @@ export function RacePlayer() {
 
     return (
         <group ref={groupRef} position={[0, 1, 0]}>
-            <SoldierModel isMoving={isMoving} color="#f59e0b" />
+            <CyberbotModel isMoving={isMoving} color="#f59e0b" />
         </group>
     );
 }

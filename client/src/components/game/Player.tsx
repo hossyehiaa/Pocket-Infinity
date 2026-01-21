@@ -6,7 +6,7 @@ import { myPlayer } from "playroomkit";
 import { useControls } from "@/lib/stores/useControls";
 import { useGameState, WEAPONS, WeaponType } from "@/lib/stores/useGameState";
 import { getGroundHeight } from "./Planet";
-import { SoldierModel } from "./SoldierModel";
+import { CyberbotModel } from "./SoldierModel";
 import { WeaponModel } from "./WeaponModel";
 import { playJump, playGunshot } from "@/lib/sounds";
 
@@ -346,7 +346,7 @@ export function Player({ onPositionChange }: PlayerProps) {
 
   return (
     <group ref={groupRef} position={[0, 1, 5]}>
-      {!isInVehicle && <SoldierModel isMoving={isMoving} color={playerColor} />}
+      {!isInVehicle && <CyberbotModel isMoving={isMoving} color={playerColor} />}
       {isOnHoverboard && !isInVehicle && <Hoverboard />}
       {/* Weapon held by player */}
       {!isInVehicle && scene === "planet" && (
