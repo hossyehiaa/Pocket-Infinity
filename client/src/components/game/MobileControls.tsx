@@ -92,53 +92,76 @@ export function MobileControls({ onTalkPress }: MobileControlsProps) {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50">
+      {/* JOYSTICK - Bottom Left (PUBG Style) */}
       <div
         ref={joystickRef}
-        className="absolute left-4 bottom-4 w-32 h-32 pointer-events-auto"
+        className="absolute left-8 bottom-24 w-32 h-32 pointer-events-auto"
         style={{ touchAction: "none" }}
       />
 
+      {/* LOOK ZONE - Right side majority */}
       <div
         ref={lookZoneRef}
-        className="absolute right-0 top-0 w-1/2 h-2/3 pointer-events-auto"
+        className="absolute right-0 top-0 w-3/5 h-full pointer-events-auto"
         style={{ touchAction: "none" }}
         onTouchStart={handleLookStart}
         onTouchMove={handleLookMove}
         onTouchEnd={handleLookEnd}
       />
 
-      <div className="absolute right-4 bottom-4 flex flex-col gap-3 pointer-events-auto">
-        <button
-          className="w-16 h-16 rounded-full bg-blue-600/80 text-white font-bold text-sm shadow-lg active:bg-blue-700 border-2 border-blue-400"
-          onPointerDown={handleJump}
-          style={{ touchAction: "manipulation" }}
-        >
-          JUMP
-        </button>
-
-        {scene === "planet" && (
+      {/* ACTION BUTTONS - Bottom Right (PUBG Arc Layout) */}
+      <div className="absolute right-4 bottom-16 pointer-events-auto">
+        <div className="relative w-48 h-48">
+          {/* JUMP Button - Top Right of Arc */}
           <button
-            className="w-16 h-16 rounded-full bg-red-600/80 text-white font-bold text-sm shadow-lg active:bg-red-700 border-2 border-red-400"
-            onPointerDown={handleShoot}
+            className="absolute right-4 top-8 w-20 h-20 rounded-full bg-blue-500/40 backdrop-blur-md text-white font-bold text-sm shadow-2xl active:bg-blue-600/60 border-2 border-white/30"
+            onPointerDown={handleJump}
             style={{ touchAction: "manipulation" }}
           >
-            SHOOT
+            <div className="text-2xl">⬆️</div>
+            <div className="text-xs mt-1">JUMP</div>
           </button>
-        )}
 
-        {scene === "bridge" && nearCrew && (
-          <button
-            className="w-16 h-16 rounded-full bg-green-600/80 text-white font-bold text-sm shadow-lg active:bg-green-700 border-2 border-green-400"
-            onPointerDown={handleTalk}
-            style={{ touchAction: "manipulation" }}
-          >
-            TALK
-          </button>
-        )}
+          {/* SHOOT Button - Right side of arc */}
+          {scene === "planet" && (
+            <button
+              className="absolute right-0 bottom-12 w-24 h-24 rounded-full bg-red-500/40 backdrop-blur-md text-white font-bold shadow-2xl active:bg-red-600/60 border-2 border-white/30"
+              onPointerDown={handleShoot}
+              style={{ touchAction: "manipulation" }}
+            >
+              <div className="text-3xl">🎯</div>
+              <div className="text-sm mt-1">FIRE</div>
+            </button>
+          )}
+
+          {/* TALK Button - Bottom of arc */}
+          {scene === "bridge" && nearCrew && (
+            <button
+              className="absolute right-12 bottom-0 w-20 h-20 rounded-full bg-green-500/40 backdrop-blur-md text-white font-bold text-sm shadow-2xl active:bg-green-600/60 border-2 border-white/30"
+              onPointerDown={handleTalk}
+              style={{ touchAction: "manipulation" }}
+            >
+              <div className="text-2xl">💬</div>
+              <div className="text-xs mt-1">TALK</div>
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="absolute left-4 top-4 text-white text-xs bg-black/50 px-2 py-1 rounded pointer-events-none">
-        {scene === "bridge" ? "USS Callister Bridge" : planetName}
+      {/* HUD INFO - Top Left (PUBG Style) */}
+      <div className="absolute left-4 top-4 pointer-events-none">
+        <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+          <div className="text-white text-sm font-bold">
+            {scene === "bridge" ? "🚀 USS Callister" : `🌍 ${planetName}`}
+          </div>
+        </div>
+      </div>
+
+      {/* SETTINGS ICON - Top Right (Minimalist) */}
+      <div className="absolute right-4 top-4 pointer-events-auto">
+        <button className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white text-xl hover:bg-black/70">
+          ⚙️
+        </button>
       </div>
     </div>
   );

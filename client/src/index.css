@@ -28,3 +28,43 @@ canvas {
   height: 100% !important;
   touch-action: none;
 }
+
+/* Portrait Mode Warning - Force Landscape */
+@media (max-width: 768px) and (orientation: portrait) {
+  #root::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+  }
+
+  #root::after {
+    content: "📱\A\APlease Rotate Device\Ato Play\A\A→ Landscape Mode →";
+    white-space: pre;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.8;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
