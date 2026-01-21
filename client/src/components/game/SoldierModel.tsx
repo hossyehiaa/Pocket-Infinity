@@ -50,12 +50,12 @@ function CyberbotGLTF({ isMoving = false, color }: CyberbotModelProps) {
   useEffect(() => {
     if (!actions) return;
 
-    // The bot model has "Run", "Icon", "Walk", "Idle" etc.
-    const runAction = actions["Run"];
+    // RobotExpressive model has "Running", "Walking", "Idle"
+    const runAction = actions["Running"];
     const idleAction = actions["Idle"];
 
     // Determine which animation to play
-    const targetActionName = isMoving ? "Run" : "Idle";
+    const targetActionName = isMoving ? "Running" : "Idle";
 
     if (currentAction.current !== targetActionName) {
       const prev = currentAction.current ? actions[currentAction.current] : null;
@@ -78,7 +78,7 @@ function CyberbotGLTF({ isMoving = false, color }: CyberbotModelProps) {
   }, [actions]);
 
   return (
-    <group ref={group} dispose={null} scale={1.5}>
+    <group ref={group} dispose={null} scale={0.5}>
       <primitive object={clonedScene} />
     </group>
   );
