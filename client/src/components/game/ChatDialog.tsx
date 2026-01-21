@@ -8,7 +8,7 @@ export function ChatDialog() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   const {
     chatOpen,
     setChatOpen,
@@ -41,20 +41,20 @@ export function ChatDialog() {
     const lowerMessage = userMessage.toLowerCase();
     if (lowerMessage.includes("warp") || lowerMessage.includes("go to") || lowerMessage.includes("take me to")) {
       addChatMessage("assistant", `*${nearCrew.name} nervously operates the console* "Y-yes Captain... initiating warp sequence..."`);
-      
+
       setWarping(true);
       playWarpDrive();
-      
+
       try {
         const params = await generatePlanetParams(userMessage);
-        
+
         setTimeout(() => {
           setPlanetParams(params);
           setScene("planet");
           setWarping(false);
           setChatOpen(false);
           clearChat();
-          
+
           if (isHost()) {
             setRoomState("gameScene", "planet", true);
             setRoomState("worldTheme", params, true);
@@ -65,7 +65,7 @@ export function ChatDialog() {
         setWarping(false);
         addChatMessage("assistant", `*${nearCrew.name} looks panicked* "I-I'm sorry Captain, the warp drive malfunctioned!"`);
       }
-      
+
       setIsLoading(false);
       return;
     }
@@ -90,16 +90,17 @@ export function ChatDialog() {
   if (!chatOpen || !nearCrew) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div 
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 99999, pointerEvents: 'auto' }}>
+      <div
         className="absolute inset-0 bg-black/60"
         onClick={handleClose}
+        style={{ pointerEvents: 'auto', cursor: 'pointer' }}
       />
-      
-      <div className="relative bg-gray-900/95 border border-cyan-500/50 rounded-lg w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl shadow-cyan-500/20">
+
+      <div className="relative bg-gray-900/95 border border-cyan-500/50 rounded-lg w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl shadow-cyan-500/20" style={{ pointerEvents: 'auto' }}>
         <div className="flex items-center justify-between p-4 border-b border-cyan-500/30">
           <div className="flex items-center gap-2">
-            <div 
+            <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: nearCrew.name === "Walton" ? "#22c55e" : "#ec4899" }}
             />
@@ -108,6 +109,7 @@ export function ChatDialog() {
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white text-xl"
+            style={{ pointerEvents: 'auto', cursor: 'pointer', touchAction: 'manipulation' }}
           >
             ×
           </button>
@@ -119,7 +121,7 @@ export function ChatDialog() {
               Note: AI responses are limited. Add VITE_GOOGLE_API_KEY for full AI chat.
             </div>
           )}
-          
+
           {chatMessages.length === 0 && (
             <div className="text-gray-500 text-sm italic">
               *{nearCrew.name} stands nervously, awaiting your command, Captain.*
@@ -127,15 +129,14 @@ export function ChatDialog() {
               <span className="text-cyan-400">Tip: Say "Warp to [planet name]" to explore!</span>
             </div>
           )}
-          
+
           {chatMessages.map((msg, i) => (
             <div
               key={i}
-              className={`p-2 rounded ${
-                msg.role === "user"
+              className={`p-2 rounded ${msg.role === "user"
                   ? "bg-cyan-900/50 text-cyan-100 ml-8"
                   : "bg-gray-800/50 text-gray-200 mr-8"
-              }`}
+                }`}
             >
               <span className="text-xs text-gray-500 block mb-1">
                 {msg.role === "user" ? "Captain" : nearCrew.name}
@@ -143,13 +144,13 @@ export function ChatDialog() {
               {msg.content}
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="text-gray-400 italic">
               *{nearCrew.name} is thinking...*
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -168,6 +169,7 @@ export function ChatDialog() {
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
               className="bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-700 px-4 py-2 rounded text-white font-bold transition-colors"
+              style={{ pointerEvents: 'auto', cursor: 'pointer', touchAction: 'manipulation' }}
             >
               Send
             </button>
