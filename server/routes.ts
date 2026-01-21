@@ -1,9 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+export { app };
 const httpServer = createServer(app);
 
 app.use(express.json());
@@ -47,7 +47,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-    await registerRoutes(httpServer, app);
+    // Routes are registered directly via app.use() above
 
     app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
         const status = err.status || err.statusCode || 500;
