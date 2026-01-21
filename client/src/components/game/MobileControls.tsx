@@ -33,8 +33,8 @@ export function MobileControls({ onTalkPress }: MobileControlsProps) {
 
     joystickInstance.current.on("move", (_evt, data) => {
       if (data.vector) {
-        // User requested removing the negative on Y to fix inversion
-        setMove(data.vector.x, data.vector.y);
+        // Negate Y to fix inversion: UP = forward, DOWN = backward
+        setMove(data.vector.x, -data.vector.y);
       }
     });
 
