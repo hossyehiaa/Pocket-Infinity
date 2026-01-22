@@ -68,3 +68,10 @@ canvas {
     }
   }
 }
+
+/* Hide mobile controls in portrait mode */
+@media (orientation: portrait) {
+  .hud-controls {
+    display: none !important;
+  }
+}

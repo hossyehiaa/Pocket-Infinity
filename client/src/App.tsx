@@ -13,6 +13,7 @@ import { RaceLevel } from "@/components/game/RaceLevel";
 import { Player } from "@/components/game/Player";
 import { NetworkManager } from "@/components/game/NetworkManager";
 import { MobileControls } from "@/components/game/MobileControls";
+import { KeyboardMouseControls } from "@/components/game/KeyboardMouseControls";
 import { ChatDialog } from "@/components/game/ChatDialog";
 import { GameUI } from "@/components/game/GameUI";
 import { VoiceEnabler } from "@/components/game/VoiceEnabler";
@@ -152,6 +153,7 @@ function App() {
         <VoiceEnabler />
 
         {isMobile && <MobileControls />}
+        {!isMobile && <KeyboardMouseControls />}
       </KeyboardControls>
     </div>
   );

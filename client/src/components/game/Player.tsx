@@ -220,12 +220,17 @@ export function Player({ onPositionChange }: PlayerProps) {
       cameraRotationRef.current.x -= mobileControls.lookY;
       cameraRotationRef.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraRotationRef.current.x));
     } else {
-      if (keyboard.forward) moveZ = -1;
-      if (keyboard.back) moveZ = 1;
-      if (keyboard.left) moveX = -1;
-      if (keyboard.right) moveX = 1;
-      shouldJump = keyboard.jump;
-      shouldShoot = keyboard.shoot;
+      // PC: Use keyboard for movement (WASD handled by KeyboardMouseControls via mobileControls store)
+      // and mouse for look (also via mobileControls store from KeyboardMouseControls)
+      moveX = mobileControls.moveX;
+      moveZ = mobileControls.moveZ;
+      shouldJump = mobileControls.jump;
+      shouldShoot = mobileControls.shoot;
+
+      // Mouse look
+      cameraRotationRef.current.y -= mobileControls.lookX;
+      cameraRotationRef.current.x -= mobileControls.lookY;
+      cameraRotationRef.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraRotationRef.current.x));
     }
 
     const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();

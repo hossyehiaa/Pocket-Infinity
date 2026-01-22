@@ -92,12 +92,18 @@ export function MobileControls({ onTalkPress }: MobileControlsProps) {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50">
-      {/* JOYSTICK - Bottom Left (PUBG Style) */}
-      <div
-        ref={joystickRef}
-        className="absolute left-8 bottom-24 w-32 h-32 pointer-events-auto"
-        style={{ touchAction: "none" }}
-      />
+      {/* LEFT CONTROLS ZONE - Joystick */}
+      <div className="hud-controls absolute left-0 bottom-0 pointer-events-none">
+        <div
+          ref={joystickRef}
+          className="absolute w-32 h-32 pointer-events-auto"
+          style={{
+            touchAction: "none",
+            left: "20px",
+            bottom: "20px"
+          }}
+        />
+      </div>
 
       {/* LOOK ZONE - Right side majority */}
       <div
@@ -109,42 +115,56 @@ export function MobileControls({ onTalkPress }: MobileControlsProps) {
         onTouchEnd={handleLookEnd}
       />
 
-      {/* ACTION BUTTONS - Bottom Right (PUBG Arc Layout) */}
-      <div className="absolute right-4 bottom-16 pointer-events-auto">
-        <div className="relative w-48 h-48">
-          {/* JUMP Button - Top Right of Arc */}
-          <button
-            className="absolute right-4 top-8 w-20 h-20 rounded-full bg-blue-500/40 backdrop-blur-md text-white font-bold text-sm shadow-2xl active:bg-blue-600/60 border-2 border-white/30"
-            onPointerDown={handleJump}
-            style={{ touchAction: "manipulation" }}
-          >
-            <div className="text-2xl">⬆️</div>
-            <div className="text-xs mt-1">JUMP</div>
-          </button>
-
-          {/* SHOOT Button - Right side of arc */}
-          {scene === "planet" && (
+      {/* RIGHT CONTROLS ZONE - Action Buttons */}
+      <div className="hud-controls absolute right-0 bottom-0 pointer-events-none">
+        <div className="relative" style={{ paddingRight: "30px", paddingBottom: "30px" }}>
+          <div className="relative w-52 h-52">
+            {/* JUMP Button - Top Right of Arc */}
             <button
-              className="absolute right-0 bottom-12 w-24 h-24 rounded-full bg-red-500/40 backdrop-blur-md text-white font-bold shadow-2xl active:bg-red-600/60 border-2 border-white/30"
-              onPointerDown={handleShoot}
-              style={{ touchAction: "manipulation" }}
+              className="absolute w-20 h-20 rounded-full bg-blue-500/50 backdrop-blur-lg text-white font-bold text-sm shadow-2xl active:bg-blue-600/70 border-2 border-white/30 pointer-events-auto"
+              onPointerDown={handleJump}
+              style={{
+                touchAction: "manipulation",
+                right: "12px",
+                top: "24px"
+              }}
             >
-              <div className="text-3xl">🎯</div>
-              <div className="text-sm mt-1">FIRE</div>
+              <div className="text-2xl">⬆️</div>
+              <div className="text-xs mt-1">JUMP</div>
             </button>
-          )}
 
-          {/* TALK Button - Bottom of arc */}
-          {scene === "bridge" && nearCrew && (
-            <button
-              className="absolute right-12 bottom-0 w-20 h-20 rounded-full bg-green-500/40 backdrop-blur-md text-white font-bold text-sm shadow-2xl active:bg-green-600/60 border-2 border-white/30"
-              onPointerDown={handleTalk}
-              style={{ touchAction: "manipulation" }}
-            >
-              <div className="text-2xl">💬</div>
-              <div className="text-xs mt-1">TALK</div>
-            </button>
-          )}
+            {/* SHOOT Button - Bottom Right of arc */}
+            {scene === "planet" && (
+              <button
+                className="absolute w-24 h-24 rounded-full bg-red-500/50 backdrop-blur-lg text-white font-bold shadow-2xl active:bg-red-600/70 border-2 border-white/30 pointer-events-auto"
+                onPointerDown={handleShoot}
+                style={{
+                  touchAction: "manipulation",
+                  right: "0px",
+                  bottom: "36px"
+                }}
+              >
+                <div className="text-3xl">🎯</div>
+                <div className="text-sm mt-1">FIRE</div>
+              </button>
+            )}
+
+            {/* TALK Button - Bottom Left of arc */}
+            {scene === "bridge" && nearCrew && (
+              <button
+                className="absolute w-20 h-20 rounded-full bg-green-500/50 backdrop-blur-lg text-white font-bold text-sm shadow-2xl active:bg-green-600/70 border-2 border-white/30 pointer-events-auto"
+                onPointerDown={handleTalk}
+                style={{
+                  touchAction: "manipulation",
+                  right: "48px",
+                  bottom: "0px"
+                }}
+              >
+                <div className="text-2xl">💬</div>
+                <div className="text-xs mt-1">TALK</div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
