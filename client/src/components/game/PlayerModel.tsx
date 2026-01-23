@@ -71,7 +71,7 @@ export function PlayerModel({ rigidBodyRef, ...props }: PlayerModelProps) {
 
     return (
         <group ref={group} {...props}>
-            <primitive object={scene.clone()} scale={1.2} position={[0, -0.9, 0]} />
+            <primitive object={scene.clone()} scale={2} position={[0, -0.9, 0]} />
         </group>
     );
 }

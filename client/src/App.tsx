@@ -52,7 +52,7 @@ function Scene() {
   const { scene } = useGameState();
 
   return (
-    <Physics gravity={[0, -9.81, 0]} debug>
+    <Physics gravity={[0, -9.81, 0]}>
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
       <Stars radius={300} depth={60} count={5000} factor={4} saturation={0} fade speed={1} />
