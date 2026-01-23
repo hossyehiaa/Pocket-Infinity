@@ -102,15 +102,29 @@ export function Lobby({ onStart }: LobbyProps) {
 
                     {/* 3D Model Container */}
                     <div className="relative h-96 bg-gradient-to-b from-transparent via-white/5 to-transparent rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-                        <Canvas camera={{ position: [0, 1, 4], fov: 45 }}>
+                        <Canvas camera={{ position: [0, 2, 6], fov: 45 }}>
                             <Suspense fallback={null}>
-                                <ambientLight intensity={0.5} />
-                                <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1} castShadow />
-                                <pointLight position={[-10, -10, -10]} intensity={0.5} />
+                                {/* Enhanced Lighting */}
+                                <ambientLight intensity={1.5} />
+                                <pointLight position={[5, 5, 5]} intensity={2} />
+                                <pointLight position={[-5, 3, -5]} intensity={1} />
+                                <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1.5} castShadow />
 
-                                <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
+                                {/* Visible Ground Platform */}
+                                <mesh position={[0, -2, 0]} rotation-x={-Math.PI / 2} receiveShadow>
+                                    <circleGeometry args={[10, 32]} />
+                                    <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.7} />
+                                </mesh>
 
+                                {/* Player Model Preview */}
+                                <group position={[0, -2, 0]}>
+                                    <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
+                                </group>
+
+                                {/* Background */}
+                                <color attach="background" args={['#0a0a15']} />
                                 <Environment preset="sunset" />
+
                                 <OrbitControls
                                     enableZoom={false}
                                     enablePan={false}
@@ -118,6 +132,7 @@ export function Lobby({ onStart }: LobbyProps) {
                                     maxPolarAngle={Math.PI / 2}
                                     autoRotate
                                     autoRotateSpeed={2}
+                                    target={[0, -1, 0]}
                                 />
                             </Suspense>
                         </Canvas>
