@@ -1,6 +1,7 @@
 import { useState, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
+import { Physics, RigidBody } from "@react-three/rapier";
 import { usePlayerStore, SkinType } from "@/lib/stores/usePlayerStore";
 import { useGameState } from "@/lib/stores/useGameState";
 import { useRaceStore } from "@/lib/stores/useRaceStore";
@@ -104,22 +105,27 @@ export function Lobby({ onStart }: LobbyProps) {
                     <div className="relative h-96 bg-gradient-to-b from-transparent via-white/5 to-transparent rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
                         <Canvas camera={{ position: [0, 2, 6], fov: 45 }}>
                             <Suspense fallback={null}>
-                                {/* Enhanced Lighting */}
-                                <ambientLight intensity={1.5} />
-                                <pointLight position={[5, 5, 5]} intensity={2} />
-                                <pointLight position={[-5, 3, -5]} intensity={1} />
-                                <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1.5} castShadow />
+                                {/* Physics Wrapper */}
+                                <Physics gravity={[0, -9.81, 0]}>
+                                    {/* Enhanced Lighting */}
+                                    <ambientLight intensity={1.5} />
+                                    <pointLight position={[5, 5, 5]} intensity={2} />
+                                    <pointLight position={[-5, 3, -5]} intensity={1} />
+                                    <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1.5} castShadow />
 
-                                {/* Visible Ground Platform */}
-                                <mesh position={[0, -2, 0]} rotation-x={-Math.PI / 2} receiveShadow>
-                                    <circleGeometry args={[10, 32]} />
-                                    <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.7} />
-                                </mesh>
+                                    {/* Visible Ground Platform with Physics Collider */}
+                                    <RigidBody type="fixed" position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                                        <mesh receiveShadow>
+                                            <circleGeometry args={[10, 32]} />
+                                            <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.7} />
+                                        </mesh>
+                                    </RigidBody>
 
-                                {/* Player Model Preview */}
-                                <group position={[0, -2, 0]}>
-                                    <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
-                                </group>
+                                    {/* Player Model Preview */}
+                                    <group position={[0, -2, 0]}>
+                                        <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
+                                    </group>
+                                </Physics>
 
                                 {/* Background */}
                                 <color attach="background" args={['#0a0a15']} />
