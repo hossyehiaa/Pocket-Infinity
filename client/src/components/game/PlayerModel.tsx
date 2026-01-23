@@ -17,17 +17,28 @@ export function PlayerModel({ rigidBodyRef, ...props }: PlayerModelProps) {
 
     // Debug: Log available animations
     useEffect(() => {
-        console.log('Available animations:', actions);
+        console.log('=== PLAYERMODEL DEBUG ===');
+        console.log('Available actions:', actions);
         console.log('Animation names:', Object.keys(actions));
+        console.log('Number of animations:', Object.keys(actions).length);
+
+        // Log each animation's details
+        Object.entries(actions).forEach(([name, action]) => {
+            console.log(`Animation "${name}":`, action);
+        });
     }, [actions]);
 
     // Play initial idle animation
     useEffect(() => {
         if (actions && Object.keys(actions).length > 0) {
-            const idleAction = actions['Idle'] || actions['idle'] || Object.values(actions)[0];
+            // Try multiple name variations
+            const idleAction = actions['Idle'] || actions['idle'] || actions['TPose'] || actions['T-Pose'] || Object.values(actions)[0];
             if (idleAction) {
                 idleAction.reset().fadeIn(0.2).play();
-                console.log('Playing initial animation:', idleAction);
+                console.log('✅ Playing initial animation:', idleAction);
+                console.log('Animation clip name:', idleAction.getClip()?.name);
+            } else {
+                console.error('❌ No idle animation found!');
             }
         }
     }, [actions]);
@@ -60,7 +71,7 @@ export function PlayerModel({ rigidBodyRef, ...props }: PlayerModelProps) {
 
     return (
         <group ref={group} {...props}>
-            <primitive object={scene.clone()} />
+            <primitive object={scene.clone()} scale={1.2} position={[0, -0.9, 0]} />
         </group>
     );
 }

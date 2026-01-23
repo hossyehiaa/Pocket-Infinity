@@ -368,7 +368,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     >
       <CapsuleCollider args={[0.5, 0.3]} />
       <group ref={groupRef}>
-        {!isInVehicle && <PlayerModel rigidBodyRef={rigidBodyRef} position-y={-1} />}
+        {!isInVehicle && <PlayerModel rigidBodyRef={rigidBodyRef} />}
         {isOnHoverboard && !isInVehicle && <Hoverboard />}
         {/* Weapon held by player */}
         {!isInVehicle && scene === "planet" && (
