@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
+import { RigidBody, type RapierRigidBody, CapsuleCollider } from "@react-three/rapier";
 import * as THREE from "three";
 import { myPlayer } from "playroomkit";
 import { useControls } from "@/lib/stores/useControls";
@@ -58,8 +59,8 @@ function Hoverboard() {
 }
 
 export function Player({ onPositionChange }: PlayerProps) {
+  const rigidBodyRef = useRef<RapierRigidBody>(null);
   const groupRef = useRef<THREE.Group>(null);
-  const velocityRef = useRef(new THREE.Vector3());
   const isGroundedRef = useRef(true);
   const cameraRotationRef = useRef({ x: 0, y: 0 });
 
@@ -80,18 +81,17 @@ export function Player({ onPositionChange }: PlayerProps) {
   const lastWeaponSwitch = useRef(0);
   const lastHoverboardToggle = useRef(0);
   const lastVehicleToggle = useRef(0);
-  const gravity = scene === "planet" ? planetParams.gravity : -9.8;
   const playerHeight = 1.0;
 
   useEffect(() => {
-    if (groupRef.current) {
+    if (rigidBodyRef.current) {
       if (scene === "bridge") {
-        groupRef.current.position.set(0, 1, 5);
+        rigidBodyRef.current.setTranslation({ x: 0, y: 1, z: 5 }, true);
       } else {
         const groundY = getGroundHeight(0, 0);
-        groupRef.current.position.set(0, groundY + playerHeight, 0);
+        rigidBodyRef.current.setTranslation({ x: 0, y: groundY + playerHeight, z: 0 }, true);
       }
-      velocityRef.current.set(0, 0, 0);
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
       cameraRotationRef.current = { x: 0, y: 0 };
     }
   }, [scene]);
@@ -160,7 +160,7 @@ export function Player({ onPositionChange }: PlayerProps) {
   };
 
   useFrame((state, delta) => {
-    if (!groupRef.current) return;
+    if (!rigidBodyRef.current || !groupRef.current) return;
     if (isGameOver) return;
 
     const keyboard = getKeyboard();
@@ -197,11 +197,17 @@ export function Player({ onPositionChange }: PlayerProps) {
       }
     }
 
+    // Handle knockback with physics
     if (knockbackDirection) {
       knockbackVelocity.current.set(...knockbackDirection).multiplyScalar(3);
     }
     if (knockbackVelocity.current.length() > 0.01) {
-      groupRef.current.position.add(knockbackVelocity.current.clone().multiplyScalar(delta));
+      const currentVel = rigidBodyRef.current.linvel();
+      rigidBodyRef.current.setLinvel({
+        x: currentVel.x + knockbackVelocity.current.x * delta,
+        y: currentVel.y,
+        z: currentVel.z + knockbackVelocity.current.z * delta
+      }, true);
       knockbackVelocity.current.multiplyScalar(0.9);
     }
 
@@ -236,17 +242,20 @@ export function Player({ onPositionChange }: PlayerProps) {
     const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();
     moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotationRef.current.y);
 
-    const newX = groupRef.current.position.x + moveDir.x * moveSpeed * delta;
-    const newZ = groupRef.current.position.z + moveDir.z * moveSpeed * delta;
-
-    groupRef.current.position.x = newX;
-    groupRef.current.position.z = newZ;
+    // Physics-based movement - set velocity instead of position
+    const currentVel = rigidBodyRef.current.linvel();
+    rigidBodyRef.current.setLinvel({
+      x: moveDir.x * moveSpeed,
+      y: currentVel.y, // Preserve vertical velocity for jumping/falling
+      z: moveDir.z * moveSpeed
+    }, true);
 
     const moving = moveDir.length() > 0.1;
     if (moving !== isMoving) {
       setIsMoving(moving);
     }
 
+    // Update player rotation based on movement
     if (moving) {
       const targetRotation = Math.atan2(moveDir.x, moveDir.z);
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
@@ -256,34 +265,32 @@ export function Player({ onPositionChange }: PlayerProps) {
       );
     }
 
-    let groundLevel: number;
-    if (scene === "planet") {
-      groundLevel = getGroundHeight(groupRef.current.position.x, groupRef.current.position.z) + playerHeight;
-      if (isOnHoverboard) {
-        groundLevel += 0.5;
-      }
-    } else {
-      groundLevel = 1;
-    }
+    // Get current position from physics body
+    const position = rigidBodyRef.current.translation();
+    groupRef.current.position.set(position.x, position.y, position.z);
 
+    // Jump with impulse
     if (shouldJump && isGroundedRef.current && !isOnHoverboard) {
-      velocityRef.current.y = jumpForce;
+      rigidBodyRef.current.applyImpulse({ x: 0, y: jumpForce, z: 0 }, true);
       isGroundedRef.current = false;
       playJump();
     }
 
-    velocityRef.current.y += gravity * delta;
-    groupRef.current.position.y += velocityRef.current.y * delta;
-
-    if (groupRef.current.position.y <= groundLevel) {
-      groupRef.current.position.y = groundLevel;
-      velocityRef.current.y = 0;
+    // Simple ground detection (could be improved with raycasting)
+    if (currentVel.y <= 0.1 && currentVel.y >= -0.1) {
       isGroundedRef.current = true;
+    } else {
+      isGroundedRef.current = false;
     }
 
+    // Boundary enforcement for bridge scene
     if (scene === "bridge") {
-      groupRef.current.position.x = Math.max(-8, Math.min(8, groupRef.current.position.x));
-      groupRef.current.position.z = Math.max(-8, Math.min(8, groupRef.current.position.z));
+      const pos = rigidBodyRef.current.translation();
+      const clampedX = Math.max(-8, Math.min(8, pos.x));
+      const clampedZ = Math.max(-8, Math.min(8, pos.z));
+      if (clampedX !== pos.x || clampedZ !== pos.z) {
+        rigidBodyRef.current.setTranslation({ x: clampedX, y: pos.y, z: clampedZ }, true);
+      }
     }
 
     if (scene === "planet" && shouldShoot) {
@@ -350,15 +357,26 @@ export function Player({ onPositionChange }: PlayerProps) {
   const playerColor = me?.getState("color") || "#4a90d9";
 
   return (
-    <group ref={groupRef} position={[0, 1, 5]}>
-      {!isInVehicle && <CyberbotModel isMoving={isMoving} color={playerColor} />}
-      {isOnHoverboard && !isInVehicle && <Hoverboard />}
-      {/* Weapon held by player */}
-      {!isInVehicle && scene === "planet" && (
-        <group position={[0.3, 0.8, 0.5]} rotation={[0, Math.PI / 2, 0]}>
-          <WeaponModel type={currentWeapon} isShooting={isShooting} />
-        </group>
-      )}
-    </group>
+    <RigidBody
+      ref={rigidBodyRef}
+      type="dynamic"
+      enabledRotations={[false, true, false]}
+      lockTranslations={false}
+      mass={1}
+      linearDamping={0.5}
+      angularDamping={1}
+    >
+      <CapsuleCollider args={[0.5, 0.3]} />
+      <group ref={groupRef}>
+        {!isInVehicle && <CyberbotModel isMoving={isMoving} color={playerColor} />}
+        {isOnHoverboard && !isInVehicle && <Hoverboard />}
+        {/* Weapon held by player */}
+        {!isInVehicle && scene === "planet" && (
+          <group position={[0.3, 0.8, 0.5]} rotation={[0, Math.PI / 2, 0]}>
+            <WeaponModel type={currentWeapon} isShooting={isShooting} />
+          </group>
+        )}
+      </group>
+    </RigidBody>
   );
 }

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
+import { RigidBody, type RapierRigidBody, CapsuleCollider } from "@react-three/rapier";
 import * as THREE from "three";
 import { CyberbotModel } from "./SoldierModel";
 import { useControls } from "@/lib/stores/useControls";
@@ -21,8 +22,8 @@ const FALL_THRESHOLD = -5;
 const CHECKPOINT_INTERVAL = 40;
 
 export function RacePlayer() {
+    const rigidBodyRef = useRef<RapierRigidBody>(null);
     const groupRef = useRef<THREE.Group>(null);
-    const velocityRef = useRef(new THREE.Vector3(0, 0, 0));
     const isGroundedRef = useRef(true);
     const [isMoving, setIsMoving] = useState(false);
     const [, getKeyboard] = useKeyboardControls<Controls>();
@@ -35,16 +36,16 @@ export function RacePlayer() {
 
     // Reset on mount
     useEffect(() => {
-        if (groupRef.current) {
-            groupRef.current.position.set(0, 1, 0);
-            velocityRef.current.set(0, 0, 0);
+        if (rigidBodyRef.current) {
+            rigidBodyRef.current.setTranslation({ x: 0, y: 1, z: 0 }, true);
+            rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
             lastCheckpointRef.current = [0, 1, 0];
             hasFinishedRef.current = false;
         }
     }, []);
 
     useFrame((state, delta) => {
-        if (!groupRef.current || playerQualified || playerEliminated) return;
+        if (!rigidBodyRef.current || !groupRef.current || playerQualified || playerEliminated) return;
 
         // Respawn cooldown
         if (respawnCooldownRef.current > 0) {
@@ -72,13 +73,24 @@ export function RacePlayer() {
             shouldJump = keyboard.jump;
         }
 
-        // Movement
+        // Movement with physics
         const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();
-        groupRef.current.position.x += moveDir.x * moveSpeed * delta;
-        groupRef.current.position.z += moveDir.z * moveSpeed * delta;
+        const currentVel = rigidBodyRef.current.linvel();
+        rigidBodyRef.current.setLinvel({
+            x: moveDir.x * moveSpeed,
+            y: currentVel.y,
+            z: moveDir.z * moveSpeed
+        }, true);
+
+        // Update position for rendering
+        const position = rigidBodyRef.current.translation();
+        groupRef.current.position.set(position.x, position.y, position.z);
 
         // Keep on platform
-        groupRef.current.position.x = Math.max(-9, Math.min(9, groupRef.current.position.x));
+        if (position.x < -9 || position.x > 9) {
+            const clampedX = Math.max(-9, Math.min(9, position.x));
+            rigidBodyRef.current.setTranslation({ x: clampedX, y: position.y, z: position.z }, true);
+        }
 
         // Update moving state
         const moving = moveDir.length() > 0.1;
@@ -96,38 +108,34 @@ export function RacePlayer() {
             );
         }
 
-        // Jump
+        // Jump with impulse
         if (shouldJump && isGroundedRef.current) {
-            velocityRef.current.y = jumpForce;
+            rigidBodyRef.current.applyImpulse({ x: 0, y: jumpForce, z: 0 }, true);
             isGroundedRef.current = false;
             playJump();
         }
 
-        // Gravity
-        velocityRef.current.y -= 20 * delta;
-        groupRef.current.position.y += velocityRef.current.y * delta;
-
-        // Ground collision
-        if (groupRef.current.position.y <= 1) {
-            groupRef.current.position.y = 1;
-            velocityRef.current.y = 0;
+        // Ground detection
+        if (currentVel.y <= 0.1 && currentVel.y >= -0.1) {
             isGroundedRef.current = true;
+        } else {
+            isGroundedRef.current = false;
         }
 
         // Update checkpoint
-        const currentZ = groupRef.current.position.z;
+        const currentZ = position.z;
         if (Math.floor(currentZ / CHECKPOINT_INTERVAL) > Math.floor(lastCheckpointRef.current[2] / CHECKPOINT_INTERVAL)) {
             lastCheckpointRef.current = [
-                groupRef.current.position.x,
-                groupRef.current.position.y,
-                groupRef.current.position.z
+                position.x,
+                position.y,
+                position.z
             ];
         }
 
         // Fall detection - respawn at checkpoint
-        if (groupRef.current.position.y < FALL_THRESHOLD) {
-            groupRef.current.position.set(...lastCheckpointRef.current);
-            velocityRef.current.set(0, 0, 0);
+        if (position.y < FALL_THRESHOLD) {
+            rigidBodyRef.current.setTranslation({ x: lastCheckpointRef.current[0], y: lastCheckpointRef.current[1], z: lastCheckpointRef.current[2] }, true);
+            rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
             respawnCooldownRef.current = 1; // 1 second penalty
         }
 
@@ -155,8 +163,17 @@ export function RacePlayer() {
     });
 
     return (
-        <group ref={groupRef} position={[0, 1, 0]}>
-            <CyberbotModel isMoving={isMoving} color="#f59e0b" />
-        </group>
+        <RigidBody
+            ref={rigidBodyRef}
+            type="dynamic"
+            enabledRotations={[false, true, false]}
+            mass={1}
+            linearDamping={0.5}
+        >
+            <CapsuleCollider args={[0.5, 0.3]} />
+            <group ref={groupRef}>
+                <CyberbotModel isMoving={isMoving} color="#f59e0b" />
+            </group>
+        </RigidBody>
     );
 }

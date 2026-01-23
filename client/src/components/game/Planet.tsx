@@ -1,6 +1,7 @@
 import { useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { useFrame, useThree, useLoader } from "@react-three/fiber";
 import { Stars, Text, Sky, Environment } from "@react-three/drei";
+import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useGameState } from "@/lib/stores/useGameState";
 import { playExplosion } from "@/lib/sounds";
@@ -65,14 +66,16 @@ function Terrain({ color }: { color: string }) {
   }, []);
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <primitive object={geometry} />
-      <meshStandardMaterial
-        color={color}
-        roughness={0.85}
-        metalness={0.1}
-      />
-    </mesh>
+    <RigidBody type="fixed" colliders="trimesh">
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <primitive object={geometry} />
+        <meshStandardMaterial
+          color={color}
+          roughness={0.85}
+          metalness={0.1}
+        />
+      </mesh>
+    </RigidBody>
   );
 }
 
@@ -680,72 +683,78 @@ function Outpost({ position, rotation, scale, type }: { position: [number, numbe
 
   if (type === 0) {
     return (
-      <group position={[position[0], groundY, position[1]]} rotation={[0, rotation, 0]} scale={scale}>
-        <mesh position={[0, 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[6, 4, 6]} />
-          <meshStandardMaterial color="#334155" metalness={0.7} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 4.2, 0]} castShadow>
-          <boxGeometry args={[7, 0.4, 7]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
-        </mesh>
-        <mesh position={[3.1, 1.5, 0]} castShadow>
-          <boxGeometry args={[0.2, 3, 2]} />
-          <meshStandardMaterial color="#0ea5e9" emissive="#0ea5e9" emissiveIntensity={0.3} />
-        </mesh>
-        <mesh position={[0, 0.2, 3.1]}>
-          <boxGeometry args={[2, 3.5, 0.1]} />
-          <meshBasicMaterial color="#000000" transparent opacity={0.8} />
-        </mesh>
-        <pointLight position={[0, 3, 0]} color="#0ea5e9" intensity={0.5} distance={10} />
-      </group>
+      <RigidBody type="fixed" colliders="hull">
+        <group position={[position[0], groundY, position[1]]} rotation={[0, rotation, 0]} scale={scale}>
+          <mesh position={[0, 2, 0]} castShadow receiveShadow>
+            <boxGeometry args={[6, 4, 6]} />
+            <meshStandardMaterial color="#334155" metalness={0.7} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 4.2, 0]} castShadow>
+            <boxGeometry args={[7, 0.4, 7]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
+          </mesh>
+          <mesh position={[3.1, 1.5, 0]} castShadow>
+            <boxGeometry args={[0.2, 3, 2]} />
+            <meshStandardMaterial color="#0ea5e9" emissive="#0ea5e9" emissiveIntensity={0.3} />
+          </mesh>
+          <mesh position={[0, 0.2, 3.1]}>
+            <boxGeometry args={[2, 3.5, 0.1]} />
+            <meshBasicMaterial color="#000000" transparent opacity={0.8} />
+          </mesh>
+          <pointLight position={[0, 3, 0]} color="#0ea5e9" intensity={0.5} distance={10} />
+        </group>
+      </RigidBody>
     );
   }
 
   if (type === 1) {
     return (
-      <group position={[position[0], groundY, position[1]]} rotation={[0, rotation, 0]} scale={scale}>
-        <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[3, 3.5, 3, 8]} />
-          <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
-        </mesh>
-        <mesh position={[0, 3.5, 0]} castShadow>
-          <coneGeometry args={[4, 2, 8]} />
-          <meshStandardMaterial color="#334155" metalness={0.7} roughness={0.3} />
-        </mesh>
-        <mesh position={[2.8, 1.5, 0]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[0.5, 2.5, 1.5]} />
-          <meshBasicMaterial color="#000000" transparent opacity={0.7} />
-        </mesh>
-        <pointLight position={[0, 2, 0]} color="#f59e0b" intensity={0.4} distance={8} />
-      </group>
+      <RigidBody type="fixed" colliders="hull">
+        <group position={[position[0], groundY, position[1]]} rotation={[0, rotation, 0]} scale={scale}>
+          <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[3, 3.5, 3, 8]} />
+            <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.4} />
+          </mesh>
+          <mesh position={[0, 3.5, 0]} castShadow>
+            <coneGeometry args={[4, 2, 8]} />
+            <meshStandardMaterial color="#334155" metalness={0.7} roughness={0.3} />
+          </mesh>
+          <mesh position={[2.8, 1.5, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.5, 2.5, 1.5]} />
+            <meshBasicMaterial color="#000000" transparent opacity={0.7} />
+          </mesh>
+          <pointLight position={[0, 2, 0]} color="#f59e0b" intensity={0.4} distance={8} />
+        </group>
+      </RigidBody>
     );
   }
 
   return (
-    <group position={[position[0], groundY, position[1]]} rotation={[0, rotation, 0]} scale={scale}>
-      <mesh position={[-2, 1.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4, 3, 5]} />
-        <meshStandardMaterial color="#374151" metalness={0.5} roughness={0.5} />
-      </mesh>
-      <mesh position={[2, 2.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4, 5, 5]} />
-        <meshStandardMaterial color="#4b5563" metalness={0.6} roughness={0.4} />
-      </mesh>
-      <mesh position={[2, 5.2, 0]} castShadow>
-        <boxGeometry args={[4.5, 0.3, 5.5]} />
-        <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[0, 0.2, 2.6]}>
-        <boxGeometry args={[1.5, 2.8, 0.1]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.8} />
-      </mesh>
-      <mesh position={[4.1, 2, 0]} castShadow>
-        <boxGeometry args={[0.15, 2, 1.5]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.4} />
-      </mesh>
-      <pointLight position={[0, 3, 0]} color="#22d3ee" intensity={0.4} distance={12} />
-    </group>
+    <RigidBody type="fixed" colliders="hull">
+      <group position={[position[0], groundY, position[1]]} rotation={[0, rotation, 0]} scale={scale}>
+        <mesh position={[-2, 1.5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4, 3, 5]} />
+          <meshStandardMaterial color="#374151" metalness={0.5} roughness={0.5} />
+        </mesh>
+        <mesh position={[2, 2.5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4, 5, 5]} />
+          <meshStandardMaterial color="#4b5563" metalness={0.6} roughness={0.4} />
+        </mesh>
+        <mesh position={[2, 5.2, 0]} castShadow>
+          <boxGeometry args={[4.5, 0.3, 5.5]} />
+          <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.2, 2.6]}>
+          <boxGeometry args={[1.5, 2.8, 0.1]} />
+          <meshBasicMaterial color="#000000" transparent opacity={0.8} />
+        </mesh>
+        <mesh position={[4.1, 2, 0]} castShadow>
+          <boxGeometry args={[0.15, 2, 1.5]} />
+          <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.4} />
+        </mesh>
+        <pointLight position={[0, 3, 0]} color="#22d3ee" intensity={0.4} distance={12} />
+      </group>
+    </RigidBody>
   );
 }
 

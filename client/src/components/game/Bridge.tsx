@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
+import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useGameState } from "@/lib/stores/useGameState";
 import { CyberbotModel } from "./SoldierModel"; // Using the new Roblox bot model
@@ -180,15 +181,18 @@ export function Bridge() {
     <group>
       <SpaceSkybox />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial
-          color="#0a0a1a"
-          metalness={0.95}
-          roughness={0.05}
-          envMapIntensity={1}
-        />
-      </mesh>
+      {/* Floor with physics */}
+      <RigidBody type="fixed" colliders="cuboid">
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+          <planeGeometry args={[20, 20]} />
+          <meshStandardMaterial
+            color="#0a0a1a"
+            metalness={0.95}
+            roughness={0.05}
+            envMapIntensity={1}
+          />
+        </mesh>
+      </RigidBody>
 
       {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 8, 0]}>

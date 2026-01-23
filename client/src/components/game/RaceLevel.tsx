@@ -1,6 +1,7 @@
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Sky, Environment } from "@react-three/drei";
+import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useRaceStore } from "@/lib/stores/useRaceStore";
 import { RaceBot } from "./RaceBot";
@@ -50,10 +51,12 @@ function RotatingHammer({ position }: { position: [number, number, number] }) {
 // Static wall obstacle
 function WallObstacle({ position, width }: { position: [number, number, number]; width: number }) {
     return (
-        <mesh position={position} castShadow receiveShadow>
-            <boxGeometry args={[width, 3, 1]} />
-            <meshStandardMaterial color="#475569" roughness={0.8} />
-        </mesh>
+        <RigidBody type="fixed" colliders="cuboid">
+            <mesh position={position} castShadow receiveShadow>
+                <boxGeometry args={[width, 3, 1]} />
+                <meshStandardMaterial color="#475569" roughness={0.8} />
+            </mesh>
+        </RigidBody>
     );
 }
 
@@ -65,10 +68,12 @@ function RacePlatform() {
     return (
         <group>
             {/* Main platform */}
-            <mesh position={[0, 0, PLATFORM_LENGTH / 2]} receiveShadow>
-                <boxGeometry args={[PLATFORM_WIDTH, 1, PLATFORM_LENGTH]} />
-                <meshStandardMaterial color="#4a5568" roughness={0.7} />
-            </mesh>
+            <RigidBody type="fixed" colliders="cuboid">
+                <mesh position={[0, 0, PLATFORM_LENGTH / 2]} receiveShadow>
+                    <boxGeometry args={[PLATFORM_WIDTH, 1, PLATFORM_LENGTH]} />
+                    <meshStandardMaterial color="#4a5568" roughness={0.7} />
+                </mesh>
+            </RigidBody>
 
             {/* Start zone - Green */}
             <mesh position={[0, 0.51, 5]}>

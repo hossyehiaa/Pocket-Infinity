@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useState } from "react";
 import { KeyboardControls, Stars } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { Physics } from "@react-three/rapier";
 import { ensureAudioReady } from "@/lib/sounds";
 import "@fontsource/inter";
 
@@ -51,7 +52,7 @@ function Scene() {
   const { scene } = useGameState();
 
   return (
-    <>
+    <Physics gravity={[0, -9.81, 0]} debug>
       <ambientLight intensity={0.5} />
       <Stars radius={300} depth={60} count={5000} factor={4} saturation={0} fade speed={1} />
       {scene === "bridge" && <Bridge />}
@@ -59,7 +60,7 @@ function Scene() {
       {scene === "race" && <RaceLevel />}
       {scene !== "race" && <Player />}
       <NetworkManager />
-    </>
+    </Physics>
   );
 }
 
