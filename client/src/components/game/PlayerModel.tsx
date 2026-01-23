@@ -71,7 +71,9 @@ export function PlayerModel({ rigidBodyRef, ...props }: PlayerModelProps) {
 
     return (
         <group ref={group} {...props}>
-            <primitive object={scene.clone()} scale={2} position={[0, -0.9, 0]} />
+            <primitive object={scene.clone()} scale={2.5} position={[0, -1, 0]} />
+            {/* Dedicated light for player model */}
+            <pointLight position={[0, 2, 1]} intensity={2} distance={8} />
         </group>
     );
 }

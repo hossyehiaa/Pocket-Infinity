@@ -313,7 +313,7 @@ export function Player({ onPositionChange }: PlayerProps) {
       setNearCrew(closest);
     }
 
-    const cameraOffset = new THREE.Vector3(0, 2, 5);
+    const cameraOffset = new THREE.Vector3(0, 4, 8);
     cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotationRef.current.y);
 
     state.camera.position.lerp(
