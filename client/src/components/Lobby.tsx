@@ -1,7 +1,7 @@
 import { useState, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
-import { Physics, RigidBody } from "@react-three/rapier";
+import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
 import { usePlayerStore, SkinType } from "@/lib/stores/usePlayerStore";
 import { useGameState } from "@/lib/stores/useGameState";
 import { useRaceStore } from "@/lib/stores/useRaceStore";
@@ -114,15 +114,16 @@ export function Lobby({ onStart }: LobbyProps) {
                                     <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1.5} castShadow />
 
                                     {/* Visible Ground Platform with Physics Collider */}
-                                    <RigidBody type="fixed" position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                                        <mesh receiveShadow>
+                                    <RigidBody type="fixed" position={[0, -2, 0]}>
+                                        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
                                             <circleGeometry args={[10, 32]} />
                                             <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.7} />
                                         </mesh>
+                                        <CuboidCollider args={[10, 0.5, 10]} position={[0, -0.5, 0]} />
                                     </RigidBody>
 
                                     {/* Player Model Preview */}
-                                    <group position={[0, -2, 0]}>
+                                    <group position={[0, 0, 0]}>
                                         <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
                                     </group>
                                 </Physics>

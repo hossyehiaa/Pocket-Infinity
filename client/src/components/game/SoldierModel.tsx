@@ -78,7 +78,7 @@ function CyberbotGLTF({ isMoving = false, color }: CyberbotModelProps) {
   }, [actions]);
 
   return (
-    <group ref={group} dispose={null} scale={0.5}>
+    <group ref={group} dispose={null} scale={0.6}>
       <primitive object={clonedScene} />
     </group>
   );
