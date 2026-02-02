@@ -8,9 +8,10 @@ import { initAudio } from "./lib/sounds";
 console.log("🔊 AUDIO SYSTEM STARTING IN PROD");
 
 insertCoin({
-  streamMode: true,
-  skipLobby: false,
-  matchmaking: true,
+  skipLobby: true,
+  defaultPlayerStates: {
+    name: "Player1"
+  }
 }).then(() => {
   console.log("🔊 AUDIO SYSTEM STARTED IN PROD - Playroom initialized");
   initAudio();

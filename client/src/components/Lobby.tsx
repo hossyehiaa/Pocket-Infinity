@@ -1,7 +1,6 @@
 import { useState, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment } from "@react-three/drei";
-import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
+import { OrbitControls, Environment, Stars } from "@react-three/drei";
 import { usePlayerStore, SkinType } from "@/lib/stores/usePlayerStore";
 import { useGameState } from "@/lib/stores/useGameState";
 import { useRaceStore } from "@/lib/stores/useRaceStore";
@@ -103,43 +102,32 @@ export function Lobby({ onStart }: LobbyProps) {
 
                     {/* 3D Model Container */}
                     <div className="relative h-96 bg-gradient-to-b from-transparent via-white/5 to-transparent rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-                        <Canvas camera={{ position: [0, 2, 6], fov: 45 }}>
+                        <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
                             <Suspense fallback={null}>
-                                {/* Physics Wrapper */}
-                                <Physics gravity={[0, -9.81, 0]}>
-                                    {/* Enhanced Lighting */}
-                                    <ambientLight intensity={1.5} />
-                                    <pointLight position={[5, 5, 5]} intensity={2} />
-                                    <pointLight position={[-5, 3, -5]} intensity={1} />
-                                    <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1.5} castShadow />
+                                {/* Enhanced Lighting */}
+                                <ambientLight intensity={1.8} />
+                                <pointLight position={[5, 5, 5]} intensity={2.5} />
+                                <pointLight position={[-5, 3, -5]} intensity={1.5} />
+                                <spotLight position={[0, 10, 5]} angle={0.4} penumbra={1} intensity={2} castShadow />
 
-                                    {/* Visible Ground Platform with Physics Collider */}
-                                    <RigidBody type="fixed" position={[0, -2, 0]}>
-                                        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-                                            <circleGeometry args={[10, 32]} />
-                                            <meshStandardMaterial color="#1a1a2e" metalness={0.3} roughness={0.7} />
-                                        </mesh>
-                                        <CuboidCollider args={[10, 0.5, 10]} position={[0, -0.5, 0]} />
-                                    </RigidBody>
+                                {/* Player Model Preview - NO PHYSICS */}
+                                <group position={[0, -2, 0]}>
+                                    <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
+                                </group>
 
-                                    {/* Player Model Preview */}
-                                    <group position={[0, 0, 0]}>
-                                        <SkinPreview skin={selectedSkin.id} color={selectedSkin.color} />
-                                    </group>
-                                </Physics>
-
-                                {/* Background */}
-                                <color attach="background" args={['#0a0a15']} />
-                                <Environment preset="sunset" />
+                                {/* Clean Space Background */}
+                                <color attach="background" args={['#000000']} />
+                                <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+                                <Environment preset="night" />
 
                                 <OrbitControls
                                     enableZoom={false}
                                     enablePan={false}
-                                    minPolarAngle={Math.PI / 3}
-                                    maxPolarAngle={Math.PI / 2}
+                                    minPolarAngle={Math.PI / 4}
+                                    maxPolarAngle={Math.PI / 1.8}
                                     autoRotate
-                                    autoRotateSpeed={2}
-                                    target={[0, -1, 0]}
+                                    autoRotateSpeed={1.5}
+                                    target={[0, -0.5, 0]}
                                 />
                             </Suspense>
                         </Canvas>
