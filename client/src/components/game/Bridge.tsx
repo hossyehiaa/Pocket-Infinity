@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
-import { RigidBody } from "@react-three/rapier";
+import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import * as THREE from "three";
 import { useGameState } from "@/lib/stores/useGameState";
 import { CyberbotModel } from "./SoldierModel"; // Using the new Roblox bot model
@@ -181,18 +181,27 @@ export function Bridge() {
     <group>
       <SpaceSkybox />
 
-      {/* Floor with physics */}
-      <RigidBody type="fixed" colliders="cuboid">
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-          <planeGeometry args={[20, 20]} />
+      {/* Solid Bridge Floor with Physics - FIXED COLLISION */}
+      <RigidBody type="fixed" position={[0, -0.5, 0]}>
+        {/* Main floor surface */}
+        <mesh receiveShadow>
+          <boxGeometry args={[25, 1, 25]} />
           <meshStandardMaterial
-            color="#0a0a1a"
-            metalness={0.95}
-            roughness={0.05}
-            envMapIntensity={1}
+            color="#1a1a2e"
+            metalness={0.9}
+            roughness={0.1}
+            envMapIntensity={1.2}
           />
         </mesh>
+        {/* Explicit collider to prevent falling */}
+        <CuboidCollider args={[12.5, 0.5, 12.5]} position={[0, 0, 0]} />
       </RigidBody>
+
+      {/* Grid lines for sci-fi floor effect */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+        <planeGeometry args={[24, 24]} />
+        <meshBasicMaterial color="#00ffff" wireframe transparent opacity={0.1} />
+      </mesh>
 
       {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 8, 0]}>
@@ -230,26 +239,32 @@ export function Bridge() {
       <ConsolePanel position={[-7, 1, -3]} rotation={[-0.3, Math.PI / 4, 0]} />
       <ConsolePanel position={[7, 1, -3]} rotation={[-0.3, -Math.PI / 4, 0]} />
 
-      {/* NPCs restored to the scene */}
-      {crew.map((member) => (
+      {/* NPCs HIDDEN - Show only player character */}
+      {/* Crew members temporarily disabled to reduce clutter */}
+      {/* {crew.map((member) => (
         <CrewMember
           key={member.id}
           name={member.name}
           position={member.position}
           isNear={nearCrew?.id === member.id}
         />
-      ))}
+      ))} */}
 
-      <ambientLight intensity={0.15} />
-      <pointLight position={[0, 7, 0]} intensity={1.2} color="#4fc3f7" castShadow />
-      <pointLight position={[-5, 3, -5]} intensity={0.5} color="#22d3ee" />
-      <pointLight position={[5, 3, -5]} intensity={0.5} color="#22d3ee" />
+      <ambientLight intensity={0.2} />
+      {/* Main overhead cyan lighting */}
+      <pointLight position={[0, 7, 0]} intensity={2} color="#00ffff" castShadow />
+      <pointLight position={[-5, 4, -5]} intensity={1.2} color="#22d3ee" />
+      <pointLight position={[5, 4, -5]} intensity={1.2} color="#22d3ee" />
+      <pointLight position={[0, 5, 5]} intensity={1} color="#60a5fa" />
+      {/* Accent floor lighting */}
+      <pointLight position={[-8, 1, 8]} intensity={0.8} color="#3b82f6" />
+      <pointLight position={[8, 1, 8]} intensity={0.8} color="#3b82f6" />
       <spotLight
-        position={[0, 7, 0]}
-        angle={0.6}
-        penumbra={0.5}
-        intensity={0.8}
-        color="#60a5fa"
+        position={[0, 8, 0]}
+        angle={0.8}
+        penumbra={0.3}
+        intensity={1.5}
+        color="#4fc3f7"
         castShadow
       />
     </group>
