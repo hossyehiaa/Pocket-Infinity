@@ -5,7 +5,7 @@ import { RigidBody, type RapierRigidBody, CapsuleCollider } from "@react-three/r
 import * as THREE from "three";
 import { myPlayer } from "playroomkit";
 import { useControls } from "@/lib/stores/useControls";
-import { useGameState, WEAPONS, WeaponType } from "@/lib/stores/useGameState";
+import { useGameState, WEAPONS, WeaponType, PlanetParams } from "@/lib/stores/useGameState";
 import { getGroundHeight } from "./Planet";
 import { PlayerModel } from "./PlayerModel";
 import { WeaponModel } from "./WeaponModel";
@@ -68,7 +68,7 @@ export function Player({ onPositionChange }: PlayerProps) {
   const {
     scene, planetParams, crew, setNearCrew, addBullet, isMobile, setPlayerPosition,
     isGameOver, knockbackDirection, currentWeapon, setWeapon, isOnHoverboard, toggleHoverboard,
-    nearVehicle, isInVehicle, setInVehicle
+    nearVehicle, isInVehicle, setInVehicle, setPlanetParams, setScene
   } = useGameState();
   const [isMoving, setIsMoving] = useState(false);
   const [isShooting, setIsShooting] = useState(false);
@@ -164,7 +164,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     if (isGameOver) return;
 
     const keyboard = getKeyboard();
-    const baseSpeed = 5;
+    const baseSpeed = 10; // Increased from 5 to 10 for faster movement
     const vehicleSpeed = isInVehicle ? baseSpeed * 4 : (isOnHoverboard ? baseSpeed * 3 : baseSpeed);
     const moveSpeed = vehicleSpeed;
     const jumpForce = 8;
@@ -297,6 +297,7 @@ export function Player({ onPositionChange }: PlayerProps) {
       fireWeapon(groupRef.current.position.clone(), cameraRotationRef.current.y);
     }
 
+    // Bridge Scene: Check for NPC interaction
     if (scene === "bridge") {
       let closest: typeof crew[0] | null = null;
       let closestDist = Infinity;
@@ -311,6 +312,33 @@ export function Player({ onPositionChange }: PlayerProps) {
         }
       }
       setNearCrew(closest);
+
+      // Press F to interact with NPCs
+      if (keyboard.interact && now - lastVehicleToggle.current > 500 && closest) {
+        lastVehicleToggle.current = now;
+
+        if (closest.id === "walton") {
+          // Travel to Mars
+          const marsParams: PlanetParams = {
+            groundColor: "#CD5C5C",
+            fogDensity: 0.015,
+            gravity: -3.7,
+            planetName: "Mars"
+          };
+          setPlanetParams(marsParams);
+          setScene("planet");
+        } else if (closest.id === "nanette") {
+          // Travel to Venus
+          const venusParams: PlanetParams = {
+            groundColor: "#F4A460",
+            fogDensity: 0.03,
+            gravity: -8.9,
+            planetName: "Venus"
+          };
+          setPlanetParams(venusParams);
+          setScene("planet");
+        }
+      }
     }
 
     const cameraOffset = new THREE.Vector3(0, 4, 8);

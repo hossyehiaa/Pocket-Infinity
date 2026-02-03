@@ -3,47 +3,35 @@ import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import * as THREE from "three";
-import { useGameState, PlanetParams } from "@/lib/stores/useGameState";
+import { useGameState } from "@/lib/stores/useGameState";
 import { CyberbotModel } from "./SoldierModel";
 import { SpaceSkybox } from "./Skybox";
 
 function CrewMember({
   name,
   position,
-  isNear,
-  onClick
+  isNear
 }: {
   name: string;
   position: [number, number, number];
   isNear: boolean;
-  onClick?: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
   // Use distinct colors for identifying bots
   const color = name === "Walton" ? "#3b82f6" : "#ec4899"; // Blue for Walton, Pink for Nanette
   const destination = name === "Walton" ? "Travel to Mars" : "Travel to Venus";
+
+  // Floating animation for interaction indicator
+  const indicatorRef = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    if (indicatorRef.current) {
+      indicatorRef.current.position.y = 2.8 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+    }
+  });
 
   return (
     <group position={position}>
       {/* Bot Model */}
       <CyberbotModel color={color} isMoving={false} />
-
-      {/* Clickable zone */}
-      <mesh
-        position={[0, 1, 0]}
-        onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        visible={false}
-      >
-        <boxGeometry args={[1.5, 2.5, 1.5]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
-
-      {/* Glow effect when hovered */}
-      {hovered && (
-        <pointLight position={[0, 1, 0]} intensity={1} color={color} distance={3} />
-      )}
 
       <Text
         position={[0, 2.2, 0]}
@@ -57,14 +45,26 @@ function CrewMember({
         {name}
       </Text>
 
+      {/* Floating interaction indicator */}
+      <group ref={indicatorRef}>
+        <Text
+          fontSize={0.4}
+          color={isNear ? "#4ade80" : "#888888"}
+          anchorX="center"
+          anchorY="middle"
+        >
+          !
+        </Text>
+      </group>
+
       <Text
         position={[0, 1.8, 0]}
         fontSize={0.15}
-        color={hovered ? "#4ade80" : "#888888"}
+        color={isNear ? "#4ade80" : "#666666"}
         anchorX="center"
         anchorY="middle"
       >
-        {hovered ? `[Click] ${destination}` : destination}
+        {destination}
       </Text>
     </group>
   );
@@ -202,30 +202,7 @@ function ConsolePanel({ position, rotation }: { position: [number, number, numbe
 }
 
 export function Bridge() {
-  const { crew, nearCrew, setScene, setPlanetParams } = useGameState();
-
-  // Planet configurations for NPCs
-  const handleWaltonClick = () => {
-    const marsParams: PlanetParams = {
-      groundColor: "#CD5C5C",
-      fogDensity: 0.015,
-      gravity: -3.7,
-      planetName: "Mars"
-    };
-    setPlanetParams(marsParams);
-    setScene("planet");
-  };
-
-  const handleNanetteClick = () => {
-    const venusParams: PlanetParams = {
-      groundColor: "#F4A460",
-      fogDensity: 0.03,
-      gravity: -8.9,
-      planetName: "Venus"
-    };
-    setPlanetParams(venusParams);
-    setScene("planet");
-  };
+  const { crew, nearCrew } = useGameState();
 
   return (
     <group>
@@ -289,33 +266,19 @@ export function Bridge() {
       <ConsolePanel position={[-7, 1, -3]} rotation={[-0.3, Math.PI / 4, 0]} />
       <ConsolePanel position={[7, 1, -3]} rotation={[-0.3, -Math.PI / 4, 0]} />
 
-      {/* RESTORED NPCs - Essential for planet selection */}
+      {/* NPCs - Essential for planet selection */}
       <CrewMember
         name="Walton"
         position={[-2, 0, 2]}
         isNear={nearCrew?.id === "walton"}
-        onClick={handleWaltonClick}
       />
       <CrewMember
         name="Nanette"
         position={[2, 0, 2]}
         isNear={nearCrew?.id === "nanette"}
-        onClick={handleNanetteClick}
       />
 
-      {/* Player Character - Static in Bridge */}
-      <group position={[0, 0, 5]}>
-        <CyberbotModel color="#f59e0b" isMoving={false} />
-        <Text
-          position={[0, 2.2, 0]}
-          fontSize={0.2}
-          color="#4ade80"
-          anchorX="center"
-          anchorY="middle"
-        >
-          You
-        </Text>
-      </group>
+      {/* Player is rendered by Player.tsx component, not here */}
 
       <ambientLight intensity={0.2} />
       {/* Main overhead cyan lighting */}

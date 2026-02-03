@@ -18,6 +18,7 @@ import { KeyboardMouseControls } from "@/components/game/KeyboardMouseControls";
 import { ChatDialog } from "@/components/game/ChatDialog";
 import { GameUI } from "@/components/game/GameUI";
 import { VoiceEnabler } from "@/components/game/VoiceEnabler";
+import { BridgeUI } from "@/components/game/BridgeUI";
 import { Lobby } from "@/components/Lobby";
 
 enum Controls {
@@ -94,7 +95,7 @@ function LoadingScreen() {
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { isMobile, setIsMobile } = useGameState();
+  const { isMobile, setIsMobile, scene } = useGameState();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -153,6 +154,7 @@ function App() {
         <GameUI />
         <ChatDialog />
         <VoiceEnabler />
+        {scene === "bridge" && <BridgeUI />}
 
         {isMobile && <MobileControls />}
         {!isMobile && <KeyboardMouseControls />}
