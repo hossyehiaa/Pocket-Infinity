@@ -394,7 +394,7 @@ export function Player({ onPositionChange }: PlayerProps) {
       linearDamping={0.5}
       angularDamping={1}
     >
-      <CapsuleCollider args={[0.5, 0.3]} />
+      <CapsuleCollider args={[0.5, 0.5]} />
       <group ref={groupRef}>
         {!isInVehicle && <PlayerModel rigidBodyRef={rigidBodyRef} />}
         {isOnHoverboard && !isInVehicle && <Hoverboard />}

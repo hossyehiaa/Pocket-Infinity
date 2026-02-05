@@ -281,7 +281,27 @@ export function Bridge() {
 
       {/* Player is rendered by Player.tsx component, not here */}
 
-      <ambientLight intensity={0.2} />
+      {/* Professional Lighting for metallic robot textures */}
+      <ambientLight intensity={0.3} />
+      <hemisphereLight
+        color="#87CEEB"
+        groundColor="#1a1a2e"
+        intensity={0.8}
+      />
+      <directionalLight
+        position={[5, 10, 5]}
+        intensity={1.5}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-near={0.5}
+        shadow-camera-far={50}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={15}
+        shadow-camera-bottom={-15}
+      />
       {/* Main overhead cyan lighting */}
       <pointLight position={[0, 7, 0]} intensity={2} color="#00ffff" castShadow />
       <pointLight position={[-5, 4, -5]} intensity={1.2} color="#22d3ee" />

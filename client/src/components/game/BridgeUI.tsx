@@ -1,15 +1,9 @@
 import { useGameState, PlanetParams } from "@/lib/stores/useGameState";
-import { useKeyboardControls } from "@react-three/drei";
-
-enum Controls {
-    interact = "interact",
-}
 
 export function BridgeUI() {
     const nearCrew = useGameState((state) => state.nearCrew);
     const setPlanetParams = useGameState((state) => state.setPlanetParams);
     const setScene = useGameState((state) => state.setScene);
-    const [, getKeyboard] = useKeyboardControls<Controls>();
 
     if (!nearCrew) return null;
 
@@ -41,8 +35,17 @@ export function BridgeUI() {
     };
 
     return (
-        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-10">
-            <div className="bg-gradient-to-r from-cyan-500/95 to-purple-600/95 backdrop-blur-md px-10 py-6 rounded-3xl shadow-2xl border-3 border-white/30 animate-pulse">
+        <div
+            style={{
+                zIndex: 9999,
+                position: 'fixed',
+                bottom: '20%',
+                left: '50%',
+                transform: 'translate(-50%, 0)',
+                pointerEvents: 'auto'
+            }}
+        >
+            <div className="bg-gradient-to-r from-cyan-500/95 to-purple-600/95 backdrop-blur-md px-10 py-6 rounded-3xl shadow-2xl border-2 border-white/30">
                 <div className="text-center">
                     <div className="text-white font-bold text-2xl mb-2">
                         🗣️ {npcName}
@@ -54,10 +57,11 @@ export function BridgeUI() {
                     {/* Large clickable button */}
                     <button
                         onClick={handleInteract}
-                        className="group relative px-8 py-3 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-lg text-white shadow-lg transition-all hover:scale-105 active:scale-95 border-2 border-white/40"
+                        className="group relative px-8 py-4 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-xl text-white shadow-lg transition-all hover:scale-105 active:scale-95 border-2 border-white/40"
+                        style={{ cursor: 'pointer' }}
                     >
-                        <div className="flex items-center gap-2 justify-center">
-                            <span>TALK</span>
+                        <div className="flex items-center gap-3 justify-center">
+                            <span>🚀 TALK</span>
                             <kbd className="px-2 py-1 bg-black/30 rounded text-sm font-mono">F</kbd>
                         </div>
                         {/* Glow effect */}
