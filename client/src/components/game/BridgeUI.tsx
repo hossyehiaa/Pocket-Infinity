@@ -1,1 +1,70 @@
-import { useGameState } from \"@/lib/stores/useGameState\";\n\nexport function BridgeUI() {\n  const { nearCrew } = useGameState();\n\n  if (!nearCrew) return null;\n\n  const destination = nearCrew.id === \"walton\" ? \"Mars\" : \"Venus\";\n  const npcName = nearCrew.name;\n\n  return (\n    <div className=\"fixed bottom-32 left-1/2 -translate-x-1/2 z-10\">\n      <div className=\"bg-gradient-to-r from-cyan-500/90 to-purple-600/90 backdrop-blur-sm px-8 py-4 rounded-2xl shadow-2xl border-2 border-white/20 animate-pulse\">\n        <div className=\"text-center\">\n          <div className=\"text-white font-bold text-xl mb-2\">\n            🗣️ Talk to {npcName}\n          </div>\n          <div className=\"text-cyan-200 text-sm mb-3\">\n            Travel to {destination}\n          </div>\n          <div className=\"text-xs text-white/70\">\n            Press <kbd className=\"px-2 py-1 bg-white/20 rounded font-mono\">F</kbd> to interact\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n
+import { useGameState, PlanetParams } from "@/lib/stores/useGameState";
+import { useKeyboardControls } from "@react-three/drei";
+
+enum Controls {
+    interact = "interact",
+}
+
+export function BridgeUI() {
+    const nearCrew = useGameState((state) => state.nearCrew);
+    const setPlanetParams = useGameState((state) => state.setPlanetParams);
+    const setScene = useGameState((state) => state.setScene);
+    const [, getKeyboard] = useKeyboardControls<Controls>();
+
+    if (!nearCrew) return null;
+
+    const destination = nearCrew.id === "walton" ? "Mars" : "Venus";
+    const npcName = nearCrew.name;
+
+    const handleInteract = () => {
+        if (nearCrew.id === "walton") {
+            // Travel to Mars
+            const marsParams: PlanetParams = {
+                groundColor: "#CD5C5C",
+                fogDensity: 0.015,
+                gravity: -3.7,
+                planetName: "Mars"
+            };
+            setPlanetParams(marsParams);
+            setScene("planet");
+        } else if (nearCrew.id === "nanette") {
+            // Travel to Venus
+            const venusParams: PlanetParams = {
+                groundColor: "#F4A460",
+                fogDensity: 0.03,
+                gravity: -8.9,
+                planetName: "Venus"
+            };
+            setPlanetParams(venusParams);
+            setScene("planet");
+        }
+    };
+
+    return (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-10">
+            <div className="bg-gradient-to-r from-cyan-500/95 to-purple-600/95 backdrop-blur-md px-10 py-6 rounded-3xl shadow-2xl border-3 border-white/30 animate-pulse">
+                <div className="text-center">
+                    <div className="text-white font-bold text-2xl mb-2">
+                        🗣️ {npcName}
+                    </div>
+                    <div className="text-cyan-100 text-md mb-4">
+                        Travel to <span className="font-bold text-white">{destination}</span>
+                    </div>
+
+                    {/* Large clickable button */}
+                    <button
+                        onClick={handleInteract}
+                        className="group relative px-8 py-3 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-lg text-white shadow-lg transition-all hover:scale-105 active:scale-95 border-2 border-white/40"
+                    >
+                        <div className="flex items-center gap-2 justify-center">
+                            <span>TALK</span>
+                            <kbd className="px-2 py-1 bg-black/30 rounded text-sm font-mono">F</kbd>
+                        </div>
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 rounded-xl blur-lg bg-white opacity-20 group-hover:opacity-40 transition-opacity -z-10" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}

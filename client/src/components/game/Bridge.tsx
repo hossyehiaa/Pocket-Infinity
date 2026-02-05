@@ -202,7 +202,8 @@ function ConsolePanel({ position, rotation }: { position: [number, number, numbe
 }
 
 export function Bridge() {
-  const { crew, nearCrew } = useGameState();
+  const crew = useGameState((state) => state.crew);
+  const nearCrew = useGameState((state) => state.nearCrew);
 
   return (
     <group>

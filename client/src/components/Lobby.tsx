@@ -22,7 +22,7 @@ function SkinPreview({ skin, color }: { skin: SkinType; color: string }) {
 }
 
 export function Lobby({ onStart }: LobbyProps) {
-    const { infinityCoins, gems, currentSkin, setSkin } = usePlayerStore();
+    const { infinityCoins, gems, currentSkin, setSkin, gamesPlayed, wins, totalKills } = usePlayerStore();
     const { setScene } = useGameState();
     const { startRace } = useRaceStore();
     const [selectedIndex, setSelectedIndex] = useState(() =>
@@ -176,19 +176,19 @@ export function Lobby({ onStart }: LobbyProps) {
                 <div className="mt-6 flex gap-6 justify-center text-center">
                     <div className="text-gray-400">
                         <div className="text-2xl font-bold text-white">
-                            {usePlayerStore.getState().gamesPlayed}
+                            {gamesPlayed}
                         </div>
                         <div className="text-xs uppercase">Games</div>
                     </div>
                     <div className="text-gray-400">
                         <div className="text-2xl font-bold text-green-400">
-                            {usePlayerStore.getState().wins}
+                            {wins}
                         </div>
                         <div className="text-xs uppercase">Wins</div>
                     </div>
                     <div className="text-gray-400">
                         <div className="text-2xl font-bold text-cyan-400">
-                            {usePlayerStore.getState().totalKills}
+                            {totalKills}
                         </div>
                         <div className="text-xs uppercase">Kills</div>
                     </div>

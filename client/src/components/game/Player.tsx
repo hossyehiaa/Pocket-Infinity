@@ -164,7 +164,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     if (isGameOver) return;
 
     const keyboard = getKeyboard();
-    const baseSpeed = 10; // Increased from 5 to 10 for faster movement
+    const baseSpeed = 20; // Doubled for faster, more responsive movement
     const vehicleSpeed = isInVehicle ? baseSpeed * 4 : (isOnHoverboard ? baseSpeed * 3 : baseSpeed);
     const moveSpeed = vehicleSpeed;
     const jumpForce = 8;
