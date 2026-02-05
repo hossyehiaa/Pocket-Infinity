@@ -62,7 +62,10 @@ export function Player({ onPositionChange }: PlayerProps) {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
   const groupRef = useRef<THREE.Group>(null);
   const isGroundedRef = useRef(true);
-  const cameraRotationRef = useRef({ x: 0, y: 0 });
+
+  // Camera rotation is controlled ONLY by mouse, not physics
+  const cameraYaw = useRef(0); // Horizontal rotation (mouse X)
+  const cameraPitch = useRef(0); // Vertical rotation (mouse Y)
 
   const mobileControls = useControls();
   const {
@@ -83,6 +86,9 @@ export function Player({ onPositionChange }: PlayerProps) {
   const lastVehicleToggle = useRef(0);
   const playerHeight = 1.0;
 
+  // Smooth camera target position
+  const smoothCameraTarget = useRef(new THREE.Vector3());
+
   useEffect(() => {
     if (rigidBodyRef.current) {
       if (scene === "bridge") {
@@ -92,7 +98,8 @@ export function Player({ onPositionChange }: PlayerProps) {
         rigidBodyRef.current.setTranslation({ x: 0, y: groundY + playerHeight, z: 0 }, true);
       }
       rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      cameraRotationRef.current = { x: 0, y: 0 };
+      cameraYaw.current = 0;
+      cameraPitch.current = 0;
     }
   }, [scene]);
 
@@ -164,10 +171,13 @@ export function Player({ onPositionChange }: PlayerProps) {
     if (isGameOver) return;
 
     const keyboard = getKeyboard();
-    const baseSpeed = 20; // Doubled for faster, more responsive movement
-    const vehicleSpeed = isInVehicle ? baseSpeed * 4 : (isOnHoverboard ? baseSpeed * 3 : baseSpeed);
+
+    // REALISTIC MOVEMENT SPEEDS
+    const baseSpeed = 5; // Reduced from 20 to 5 for realistic walking
+    const runSpeed = 8; // Running speed
+    const vehicleSpeed = isInVehicle ? baseSpeed * 3 : (isOnHoverboard ? baseSpeed * 2.5 : baseSpeed);
     const moveSpeed = vehicleSpeed;
-    const jumpForce = 8;
+    const jumpForce = 6; // Reduced for more grounded feel
 
     const now = Date.now();
     if (keyboard.weapon1 && now - lastWeaponSwitch.current > 200) {
@@ -211,57 +221,71 @@ export function Player({ onPositionChange }: PlayerProps) {
       knockbackVelocity.current.multiplyScalar(0.9);
     }
 
+    // Get movement input
     let moveX = 0;
     let moveZ = 0;
     let shouldJump = false;
     let shouldShoot = false;
+    let lookDeltaX = 0;
+    let lookDeltaY = 0;
 
-    if (isMobile) {
-      moveX = mobileControls.moveX;
-      moveZ = mobileControls.moveZ;
-      shouldJump = mobileControls.jump;
-      shouldShoot = mobileControls.shoot;
+    moveX = mobileControls.moveX;
+    moveZ = mobileControls.moveZ;
+    shouldJump = mobileControls.jump;
+    shouldShoot = mobileControls.shoot;
+    lookDeltaX = mobileControls.lookX;
+    lookDeltaY = mobileControls.lookY;
 
-      cameraRotationRef.current.y -= mobileControls.lookX;
-      cameraRotationRef.current.x -= mobileControls.lookY;
-      cameraRotationRef.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraRotationRef.current.x));
-    } else {
-      // PC: Use keyboard for movement (WASD handled by KeyboardMouseControls via mobileControls store)
-      // and mouse for look (also via mobileControls store from KeyboardMouseControls)
-      moveX = mobileControls.moveX;
-      moveZ = mobileControls.moveZ;
-      shouldJump = mobileControls.jump;
-      shouldShoot = mobileControls.shoot;
+    // CAMERA ROTATION - controlled ONLY by mouse input
+    // Apply mouse delta to camera rotation (sensitivity adjusted)
+    const mouseSensitivity = 0.003;
+    cameraYaw.current -= lookDeltaX * mouseSensitivity;
+    cameraPitch.current -= lookDeltaY * mouseSensitivity;
 
-      // Mouse look
-      cameraRotationRef.current.y -= mobileControls.lookX;
-      cameraRotationRef.current.x -= mobileControls.lookY;
-      cameraRotationRef.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraRotationRef.current.x));
+    // Clamp pitch to prevent camera flipping
+    cameraPitch.current = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraPitch.current));
+
+    // Calculate movement direction based on camera yaw (not physics body rotation!)
+    const hasMovementInput = Math.abs(moveX) > 0.01 || Math.abs(moveZ) > 0.01;
+    const moveDir = new THREE.Vector3(moveX, 0, moveZ);
+
+    if (hasMovementInput) {
+      moveDir.normalize();
+      moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current);
     }
 
-    const moveDir = new THREE.Vector3(moveX, 0, moveZ).normalize();
-    moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotationRef.current.y);
-
-    // Physics-based movement - set velocity instead of position
+    // PHYSICS MOVEMENT - Only apply velocity when keys are pressed
     const currentVel = rigidBodyRef.current.linvel();
-    rigidBodyRef.current.setLinvel({
-      x: moveDir.x * moveSpeed,
-      y: currentVel.y, // Preserve vertical velocity for jumping/falling
-      z: moveDir.z * moveSpeed
-    }, true);
 
-    const moving = moveDir.length() > 0.1;
+    if (hasMovementInput) {
+      // Apply movement velocity
+      rigidBodyRef.current.setLinvel({
+        x: moveDir.x * moveSpeed,
+        y: currentVel.y, // Preserve vertical velocity for jumping/falling
+        z: moveDir.z * moveSpeed
+      }, true);
+    } else {
+      // When no input, let damping handle the stopping (don't force velocity to 0)
+      // Just preserve gravity/vertical velocity
+      rigidBodyRef.current.setLinvel({
+        x: currentVel.x * 0.85, // Apply additional friction for quick stop
+        y: currentVel.y,
+        z: currentVel.z * 0.85
+      }, true);
+    }
+
+    const moving = hasMovementInput;
     if (moving !== isMoving) {
       setIsMoving(moving);
     }
 
-    // Update player rotation based on movement
-    if (moving) {
+    // Update player MODEL rotation based on movement direction (not camera!)
+    if (moving && moveDir.length() > 0.1) {
       const targetRotation = Math.atan2(moveDir.x, moveDir.z);
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
         groupRef.current.rotation.y,
         targetRotation,
-        0.1
+        0.15
       );
     }
 
@@ -276,7 +300,7 @@ export function Player({ onPositionChange }: PlayerProps) {
       playJump();
     }
 
-    // Simple ground detection (could be improved with raycasting)
+    // Ground detection
     if (currentVel.y <= 0.1 && currentVel.y >= -0.1) {
       isGroundedRef.current = true;
     } else {
@@ -294,7 +318,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     }
 
     if (scene === "planet" && shouldShoot) {
-      fireWeapon(groupRef.current.position.clone(), cameraRotationRef.current.y);
+      fireWeapon(groupRef.current.position.clone(), cameraYaw.current);
     }
 
     // Bridge Scene: Check for NPC interaction
@@ -318,7 +342,6 @@ export function Player({ onPositionChange }: PlayerProps) {
         lastVehicleToggle.current = now;
 
         if (closest.id === "walton") {
-          // Travel to Mars
           const marsParams: PlanetParams = {
             groundColor: "#CD5C5C",
             fogDensity: 0.015,
@@ -328,7 +351,6 @@ export function Player({ onPositionChange }: PlayerProps) {
           setPlanetParams(marsParams);
           setScene("planet");
         } else if (closest.id === "nanette") {
-          // Travel to Venus
           const venusParams: PlanetParams = {
             groundColor: "#F4A460",
             fogDensity: 0.03,
@@ -341,20 +363,33 @@ export function Player({ onPositionChange }: PlayerProps) {
       }
     }
 
-    const cameraOffset = new THREE.Vector3(0, 4, 8);
-    cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraRotationRef.current.y);
+    // CAMERA FOLLOW - Position follows player, rotation is INDEPENDENT
+    // Camera offset based on camera yaw only (not player rotation!)
+    const cameraDistance = 8;
+    const cameraHeight = 4;
 
-    state.camera.position.lerp(
-      new THREE.Vector3(
-        groupRef.current.position.x + cameraOffset.x,
-        groupRef.current.position.y + cameraOffset.y + Math.sin(cameraRotationRef.current.x) * 2,
-        groupRef.current.position.z + cameraOffset.z
-      ),
-      0.1
+    const cameraOffset = new THREE.Vector3(
+      Math.sin(cameraYaw.current) * cameraDistance,
+      cameraHeight + Math.sin(cameraPitch.current) * 3,
+      Math.cos(cameraYaw.current) * cameraDistance
     );
 
-    const lookTarget = groupRef.current.position.clone();
-    lookTarget.y += 1;
+    // Smooth camera target position
+    smoothCameraTarget.current.lerp(groupRef.current.position, 0.1);
+
+    // Camera position = smooth player position + offset
+    const targetCameraPos = new THREE.Vector3(
+      smoothCameraTarget.current.x + cameraOffset.x,
+      smoothCameraTarget.current.y + cameraOffset.y,
+      smoothCameraTarget.current.z + cameraOffset.z
+    );
+
+    // Smooth camera movement
+    state.camera.position.lerp(targetCameraPos, 0.08);
+
+    // Camera looks at player (slightly above ground level)
+    const lookTarget = smoothCameraTarget.current.clone();
+    lookTarget.y += 1.2;
     state.camera.lookAt(lookTarget);
 
     setPlayerPosition([
@@ -388,11 +423,12 @@ export function Player({ onPositionChange }: PlayerProps) {
     <RigidBody
       ref={rigidBodyRef}
       type="dynamic"
-      enabledRotations={[false, true, false]}
+      enabledRotations={[false, false, false]} // Lock ALL rotations - we control model rotation manually
       lockTranslations={false}
-      mass={1}
-      linearDamping={0.5}
-      angularDamping={1}
+      mass={2} // Heavier robot
+      linearDamping={4} // Higher damping for quick stops
+      angularDamping={10}
+      friction={1}
     >
       <CapsuleCollider args={[0.5, 0.5]} />
       <group ref={groupRef}>
