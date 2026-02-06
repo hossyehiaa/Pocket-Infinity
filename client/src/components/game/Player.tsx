@@ -363,29 +363,33 @@ export function Player({ onPositionChange }: PlayerProps) {
       }
     }
 
-    // CAMERA FOLLOW - PUBG Style / TPS
-    // Goal: Over-the-shoulder view (Right shoulder)
-    // Offset: Right +1.5, Up +2.5, Back +3.5 (Behind) relative to camera rotation
+    // CAMERA FOLLOW - IMPROVED TIGHT TPS
+    // User Feedback: "Camera is too far and not linked"
+    // Fix: Reduce offset distance, remove double-lerp latency, stiffen the spring.
 
-    // 1. Calculate ideal offset rotated by Camera Yaw (View Rotation)
-    // We use cameraYaw instead of player rotation because in TPS, camera orbit controls the view direction
-    const idealOffset = new THREE.Vector3(1.5, 2.5, 4);
+    // 1. Calculate ideal offset rotated by Camera Yaw
+    // Closer offset: Right +0.8 (closer to center), Up +1.8 (lower), Back +2.2 (much closer)
+    const idealOffset = new THREE.Vector3(0.8, 1.8, 2.2);
     idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current);
 
-    // 2. Smooth camera target (player position) to prevent jitter
-    smoothCameraTarget.current.lerp(groupRef.current.position, 0.2); // Increased learner speed for tighter follow
+    // 2. Direct target tracking (Remove the intermediate 'smoothCameraTarget' lag)
+    // We strictly track the player's position for the pivot. 
+    // Only smooth the CAMERA's physical movement, not the TARGET point.
+    const targetPosition = groupRef.current.position.clone();
 
-    // 3. Calculate final camera position
-    const targetCameraPos = smoothCameraTarget.current.clone().add(idealOffset);
+    // 3. Calculate final camera position destination
+    const targetCameraPos = targetPosition.clone().add(idealOffset);
 
-    // 4. Smoothly move camera there
-    state.camera.position.lerp(targetCameraPos, 0.15); // Faster lerp for tighter feeling
+    // 4. Tight Lerp (High value = "linked" feel). 
+    // 0.5 is very snappy, 0.1 is floaty. We want "Real" feel, so ~0.4-0.5.
+    state.camera.position.lerp(targetCameraPos, 0.4);
 
-    // 5. Look at upper spine/head area (offset from player position)
-    const lookTarget = smoothCameraTarget.current.clone();
-    lookTarget.y += 1.5; // Look at head height
-    lookTarget.add(new THREE.Vector3(0, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current)); // Optional: Look slightly ahead? No, look at player.
+    // 5. Look at upper spine/head area
+    const lookTarget = targetPosition.clone();
+    lookTarget.y += 1.4; // Slightly lower than before to match closer camera
 
+    // 6. LookAt should be instant or very tight. 
+    // Direct lookAt prevents "floaty rotation" feeling.
     state.camera.lookAt(lookTarget);
 
     setPlayerPosition([
