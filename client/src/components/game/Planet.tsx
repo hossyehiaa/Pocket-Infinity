@@ -49,33 +49,35 @@ function getTextureForPlanetType(planetType: "volcanic" | "forest" | "ice" | "de
   }
 }
 
-function Terrain({ color }: { color: string }) {
-  // No external textures - using simple colored material to avoid 404 errors
-  const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
-    const positions = geo.attributes.position.array as Float32Array;
-
-    for (let i = 0; i < positions.length; i += 3) {
-      const x = positions[i];
-      const y = positions[i + 1];
-      positions[i + 2] = getTerrainHeight(x, y);
-    }
-
-    geo.computeVertexNormals();
-    return geo;
-  }, []);
-
+function PlanetSurface({ color }: { color: string }) {
+  // Layer 1: High-poly ground sphere
   return (
     <RigidBody type="fixed" colliders="trimesh">
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <primitive object={geometry} />
+      <mesh position={[0, -50, 0]} receiveShadow castShadow>
+        <sphereGeometry args={[50, 128, 128]} />
         <meshStandardMaterial
-          color={color}
-          roughness={0.85}
-          metalness={0.1}
+          color="#3a1a5c" // Deep alien purple
+          roughness={0.8}
+          metalness={0.2}
         />
       </mesh>
     </RigidBody>
+  );
+}
+
+function Atmosphere() {
+  // Layer 2: Atmosphere glow
+  return (
+    <mesh position={[0, -50, 0]} scale={[1.02, 1.02, 1.02]}>
+      <sphereGeometry args={[50, 64, 64]} />
+      <meshPhongMaterial
+        color="#00ffff"
+        opacity={0.3}
+        transparent
+        side={THREE.BackSide}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
 }
 
@@ -922,7 +924,9 @@ export function Planet() {
       />
 
       <AtmosphericFog color={planetParams.groundColor} density={planetParams.fogDensity} />
-      <Terrain color={planetParams.groundColor} />
+      <AtmosphericFog color={planetParams.groundColor} density={planetParams.fogDensity} />
+      <PlanetSurface color={planetParams.groundColor} />
+      <Atmosphere />
       <ScatteredProps planetType={planetType} />
       <SciFiOutposts />
       <ShrinkingZone />
@@ -940,8 +944,9 @@ export function Planet() {
 
       <ambientLight intensity={0.25} />
       <directionalLight
-        position={[30, 50, 20]}
-        intensity={1.2}
+        position={[50, 20, 50]} // Side lighting for better sphere contrast
+        intensity={2.0} // Stronger sun
+        color="#ffecd1" // Warm sun color
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-far={150}

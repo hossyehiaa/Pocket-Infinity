@@ -363,33 +363,29 @@ export function Player({ onPositionChange }: PlayerProps) {
       }
     }
 
-    // CAMERA FOLLOW - Position follows player, rotation is INDEPENDENT
-    // Camera offset based on camera yaw only (not player rotation!)
-    const cameraDistance = 8;
-    const cameraHeight = 4;
+    // CAMERA FOLLOW - PUBG Style / TPS
+    // Goal: Over-the-shoulder view (Right shoulder)
+    // Offset: Right +1.5, Up +2.5, Back +3.5 (Behind) relative to camera rotation
 
-    const cameraOffset = new THREE.Vector3(
-      Math.sin(cameraYaw.current) * cameraDistance,
-      cameraHeight + Math.sin(cameraPitch.current) * 3,
-      Math.cos(cameraYaw.current) * cameraDistance
-    );
+    // 1. Calculate ideal offset rotated by Camera Yaw (View Rotation)
+    // We use cameraYaw instead of player rotation because in TPS, camera orbit controls the view direction
+    const idealOffset = new THREE.Vector3(1.5, 2.5, 4);
+    idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current);
 
-    // Smooth camera target position
-    smoothCameraTarget.current.lerp(groupRef.current.position, 0.1);
+    // 2. Smooth camera target (player position) to prevent jitter
+    smoothCameraTarget.current.lerp(groupRef.current.position, 0.2); // Increased learner speed for tighter follow
 
-    // Camera position = smooth player position + offset
-    const targetCameraPos = new THREE.Vector3(
-      smoothCameraTarget.current.x + cameraOffset.x,
-      smoothCameraTarget.current.y + cameraOffset.y,
-      smoothCameraTarget.current.z + cameraOffset.z
-    );
+    // 3. Calculate final camera position
+    const targetCameraPos = smoothCameraTarget.current.clone().add(idealOffset);
 
-    // Smooth camera movement
-    state.camera.position.lerp(targetCameraPos, 0.08);
+    // 4. Smoothly move camera there
+    state.camera.position.lerp(targetCameraPos, 0.15); // Faster lerp for tighter feeling
 
-    // Camera looks at player (slightly above ground level)
+    // 5. Look at upper spine/head area (offset from player position)
     const lookTarget = smoothCameraTarget.current.clone();
-    lookTarget.y += 1.2;
+    lookTarget.y += 1.5; // Look at head height
+    lookTarget.add(new THREE.Vector3(0, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current)); // Optional: Look slightly ahead? No, look at player.
+
     state.camera.lookAt(lookTarget);
 
     setPlayerPosition([
