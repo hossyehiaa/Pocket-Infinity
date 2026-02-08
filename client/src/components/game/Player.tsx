@@ -245,13 +245,23 @@ export function Player({ onPositionChange }: PlayerProps) {
     // Clamp pitch to prevent camera flipping
     cameraPitch.current = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraPitch.current));
 
-    // Calculate movement direction based on camera yaw (not physics body rotation!)
-    const hasMovementInput = Math.abs(moveX) > 0.01 || Math.abs(moveZ) > 0.01;
-    const moveDir = new THREE.Vector3(moveX, 0, moveZ);
+    // MOVEMENT - Camera Relative (Fix: Use Camera Vectors)
+    const cameraForward = new THREE.Vector3();
+    state.camera.getWorldDirection(cameraForward);
+    cameraForward.y = 0;
+    cameraForward.normalize();
 
-    if (hasMovementInput) {
+    const cameraRight = new THREE.Vector3();
+    cameraRight.crossVectors(cameraForward, new THREE.Vector3(0, 1, 0));
+
+    const moveDir = new THREE.Vector3();
+    moveDir.addScaledVector(cameraForward, moveZ); // Forward/Back
+    moveDir.addScaledVector(cameraRight, moveX);   // Left/Right
+
+    const hasMovementInput = Math.abs(moveX) > 0.01 || Math.abs(moveZ) > 0.01;
+
+    if (hasMovementInput && moveDir.length() > 0.1) {
       moveDir.normalize();
-      moveDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current);
     }
 
     // PHYSICS MOVEMENT - Only apply velocity when keys are pressed
@@ -279,13 +289,13 @@ export function Player({ onPositionChange }: PlayerProps) {
       setIsMoving(moving);
     }
 
-    // Update player MODEL rotation based on movement direction (not camera!)
+    // Update player MODEL rotation to face movement direction
     if (moving && moveDir.length() > 0.1) {
       const targetRotation = Math.atan2(moveDir.x, moveDir.z);
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
         groupRef.current.rotation.y,
         targetRotation,
-        0.15
+        0.2 // Slightly faster rotation
       );
     }
 
@@ -363,33 +373,26 @@ export function Player({ onPositionChange }: PlayerProps) {
       }
     }
 
-    // CAMERA FOLLOW - IMPROVED TIGHT TPS
-    // User Feedback: "Camera is too far and not linked"
-    // Fix: Reduce offset distance, remove double-lerp latency, stiffen the spring.
+    // CAMERA FOLLOW - STRICT TPS
+    // Goal: Camera strictly follows player position with fixed offset rotated by Control Yaw
 
-    // 1. Calculate ideal offset rotated by Camera Yaw
-    // Closer offset: Right +0.8 (closer to center), Up +1.8 (lower), Back +2.2 (much closer)
-    const idealOffset = new THREE.Vector3(0.8, 1.8, 2.2);
-    idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current);
-
-    // 2. Direct target tracking (Remove the intermediate 'smoothCameraTarget' lag)
-    // We strictly track the player's position for the pivot. 
-    // Only smooth the CAMERA's physical movement, not the TARGET point.
+    // 1. Direct target tracking (Instant, no lerp on target itself)
     const targetPosition = groupRef.current.position.clone();
 
-    // 3. Calculate final camera position destination
+    // 2. Calculate ideal offset rotated by Camera Yaw (Mouse Loop)
+    // Offset: Right +0.8, Up +1.8, Back +2.5
+    const idealOffset = new THREE.Vector3(0.8, 1.8, 2.5);
+    idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw.current);
+
+    // 3. Calculate final camera position
     const targetCameraPos = targetPosition.clone().add(idealOffset);
 
     // 4. Tight Lerp (High value = "linked" feel). 
-    // 0.5 is very snappy, 0.1 is floaty. We want "Real" feel, so ~0.4-0.5.
     state.camera.position.lerp(targetCameraPos, 0.4);
 
     // 5. Look at upper spine/head area
     const lookTarget = targetPosition.clone();
-    lookTarget.y += 1.4; // Slightly lower than before to match closer camera
-
-    // 6. LookAt should be instant or very tight. 
-    // Direct lookAt prevents "floaty rotation" feeling.
+    lookTarget.y += 1.4;
     state.camera.lookAt(lookTarget);
 
     setPlayerPosition([
