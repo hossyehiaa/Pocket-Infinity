@@ -11,7 +11,7 @@ interface PlayerModelProps {
 }
 
 // Fallback capsule when model fails
-function FallbackCapsule() {
+export function CapsulePlayer() {
     return (
         <group>
             {/* Body capsule */}
@@ -156,7 +156,7 @@ function RobotModel({ rigidBodyRef, ...props }: PlayerModelProps) {
 
 export function PlayerModel({ rigidBodyRef, ...props }: PlayerModelProps) {
     return (
-        <Suspense fallback={<FallbackCapsule />}>
+        <Suspense fallback={<CapsulePlayer />}>
             <RobotModel rigidBodyRef={rigidBodyRef} {...props} />
         </Suspense>
     );

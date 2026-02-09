@@ -19,6 +19,7 @@ import { ChatDialog } from "@/components/game/ChatDialog";
 import { GameUI } from "@/components/game/GameUI";
 import { VoiceEnabler } from "@/components/game/VoiceEnabler";
 import { BridgeUI } from "@/components/game/BridgeUI";
+import { AIChat } from "@/components/game/AIChat";
 import { Lobby } from "@/components/Lobby";
 
 enum Controls {
@@ -155,6 +156,7 @@ function App() {
         <ChatDialog />
         <VoiceEnabler />
         {scene === "bridge" && <BridgeUI />}
+        <AIChat />
 
         {isMobile && <MobileControls />}
         {!isMobile && <KeyboardMouseControls />}

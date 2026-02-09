@@ -7,7 +7,7 @@ import { myPlayer } from "playroomkit";
 import { useControls } from "@/lib/stores/useControls";
 import { useGameState, WEAPONS, WeaponType, PlanetParams } from "@/lib/stores/useGameState";
 import { getGroundHeight } from "./Planet";
-import { PlayerModel } from "./PlayerModel";
+import { CapsulePlayer } from "./PlayerModel";
 import { WeaponModel } from "./WeaponModel";
 import { playJump, playGunshot } from "@/lib/sounds";
 
@@ -388,7 +388,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     const targetCameraPos = targetPosition.clone().add(idealOffset);
 
     // 4. Tight Lerp (High value = "linked" feel). 
-    state.camera.position.lerp(targetCameraPos, 0.4);
+    state.camera.position.lerp(targetCameraPos, 0.1);
 
     // 5. Look at upper spine/head area
     const lookTarget = targetPosition.clone();
@@ -435,7 +435,7 @@ export function Player({ onPositionChange }: PlayerProps) {
     >
       <CapsuleCollider args={[0.5, 0.5]} />
       <group ref={groupRef}>
-        {!isInVehicle && <PlayerModel rigidBodyRef={rigidBodyRef} />}
+        {!isInVehicle && <CapsulePlayer />}
         {isOnHoverboard && !isInVehicle && <Hoverboard />}
         {/* Weapon held by player */}
         {!isInVehicle && scene === "planet" && (
